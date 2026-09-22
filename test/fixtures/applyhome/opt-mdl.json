@@ -1,0 +1,25 @@
+{
+  "page": 1,
+  "perPage": 10,
+  "totalCount": 2,
+  "currentCount": 2,
+  "matchCount": 2,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026700012",
+      "PBLANC_NO": "2026700012",
+      "MODEL_NO": "01",
+      "HOUSE_TY": "059.9500A",
+      "SUPLY_HSHLDCO": 6,
+      "LTTOT_TOP_AMOUNT": "19000"
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026700012",
+      "PBLANC_NO": "2026700012",
+      "MODEL_NO": "02",
+      "HOUSE_TY": "074.8200B",
+      "SUPLY_HSHLDCO": 4,
+      "LTTOT_TOP_AMOUNT": "24500"
+    }
+  ]
+}

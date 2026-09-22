@@ -1,0 +1,43 @@
+{
+  "page": 1,
+  "perPage": 10,
+  "totalCount": 2,
+  "currentCount": 2,
+  "matchCount": 2,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026500077",
+      "PBLANC_NO": "2026500077",
+      "MODEL_NO": "01",
+      "GP": "A",
+      "TP": "049.9800A",
+      "EXCLUSE_AR": 49.98,
+      "SUPLY_AR": 68.5,
+      "CNTRCT_AR": 70.0,
+      "SUPLY_HSHLDCO": 60,
+      "GNSPLY_HSHLDCO": 55,
+      "SPSPLY_YGMN_HSHLDCO": 3,
+      "SPSPLY_NEW_MRRG_HSHLDCO": 2,
+      "SPSPLY_AGED_HSHLDCO": 0,
+      "SUPLY_AMOUNT": "18000",
+      "SUBSCRPT_REQST_AMOUNT": "180"
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026500077",
+      "PBLANC_NO": "2026500077",
+      "MODEL_NO": "02",
+      "GP": "B",
+      "TP": "059.9700B",
+      "EXCLUSE_AR": 59.97,
+      "SUPLY_AR": 79.2,
+      "CNTRCT_AR": 81.0,
+      "SUPLY_HSHLDCO": 90,
+      "GNSPLY_HSHLDCO": 85,
+      "SPSPLY_YGMN_HSHLDCO": 4,
+      "SPSPLY_NEW_MRRG_HSHLDCO": 1,
+      "SPSPLY_AGED_HSHLDCO": 0,
+      "SUPLY_AMOUNT": "22000",
+      "SUBSCRPT_REQST_AMOUNT": "220"
+    }
+  ]
+}

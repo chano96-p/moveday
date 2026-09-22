@@ -28,8 +28,30 @@ base: `https://api.odcloud.kr/api/ApplyhomeInfoDetailSvc/v1`
 
 **인증** — 둘 다 지원 (`securityDefinitions`)
 
-- 쿼리 파라미터 `serviceKey`
-- 헤더 `Authorization`
+- 쿼리 파라미터 `serviceKey` (ApiKeyAuth2)
+- 헤더 `Authorization` (ApiKeyAuth) ← **구현은 이쪽을 쓴다** (쿼리로 보내면 Data Cache 키·액세스로그·스택트레이스에 키가 남는다)
+
+**헤더 값 형식 — `Infuser` 접두어가 필수다 [확정]**
+
+OAS `securityDefinitions`는 헤더 이름만 알려주고 값 형식을 명시하지 않는다.
+**키 없이 더미 키로 실측해 확정했다** — 응답 코드가 `-401`에서 `-4`로 바뀌는 지점이 파싱 경계다:
+
+```
+$ U='https://api.odcloud.kr/api/ApplyhomeInfoDetailSvc/v1/getAPTLttotPblancDetail?page=1&perPage=1'
+
+헤더 없음                              {"code":-401,"msg":"인증키는 필수 항목 입니다."}
+-H 'Authorization: dummykey123'        {"code":-401,"msg":"인증키는 필수 항목 입니다."}   ← 헤더 무시됨
+-H 'Authorization: Infuser dummykey'   {"code":-4,  "msg":"등록되지 않은 인증키 입니다."}  ← 키로 파싱됨
+?serviceKey=dummykey123                {"code":-4,  "msg":"등록되지 않은 인증키 입니다."}  ← 쿼리도 유효
+```
+
+접두어 없이 키만 넣으면 **유효한 키를 넣어도 `-401`로 고정된다.** 키 없음과 구분되지 않는다.
+
+```ts
+headers: { Authorization: `Infuser ${key}` }   // lib/applyhome/client.ts
+```
+
+이 방식은 테스트로 잡히지 않는다(단위 테스트가 상류를 타지 않는다). 위 curl이 유일한 검증 수단이다.
 
 키 오류 응답 (HTTP 401):
 

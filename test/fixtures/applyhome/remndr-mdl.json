@@ -1,0 +1,29 @@
+{
+  "page": 1,
+  "perPage": 10,
+  "totalCount": 2,
+  "currentCount": 2,
+  "matchCount": 2,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026930035",
+      "PBLANC_NO": "2026930035",
+      "MODEL_NO": "01",
+      "HOUSE_TY": "84㎡A",
+      "SUPLY_AR": 84.92,
+      "SUPLY_HSHLDCO": 1,
+      "SPSPLY_HSHLDCO": 0,
+      "LTTOT_TOP_AMOUNT": "35550"
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026930035",
+      "PBLANC_NO": "2026930035",
+      "MODEL_NO": "02",
+      "HOUSE_TY": "99㎡A",
+      "SUPLY_AR": 99.87,
+      "SUPLY_HSHLDCO": 1,
+      "SPSPLY_HSHLDCO": 0,
+      "LTTOT_TOP_AMOUNT": "37708"
+    }
+  ]
+}

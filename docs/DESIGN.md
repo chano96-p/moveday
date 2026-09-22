@@ -134,7 +134,7 @@ test/
 |---|---|---|---|
 | 포털 ID | data.go.kr 15098547 | data.go.kr 15098905 | R-ONE (15134761) |
 | base URL | `https://api.odcloud.kr/api/ApplyhomeInfoDetailSvc/v1` | `https://api.odcloud.kr/api/ApplyhomeInfoCmpetRtSvc/v1` | `https://www.reb.or.kr/r-one/openapi/SttsApiTblData.do` |
-| 인증 | `serviceKey` 쿼리 또는 `Authorization` 헤더 | 동일 | `KEY` 쿼리 |
+| 인증 | `Authorization: Infuser {key}` 헤더 (`serviceKey` 쿼리도 가능) | 동일 | `KEY` 쿼리 |
 | 페이징 | `page` / `perPage` | 동일 | `pIndex` / `pSize` |
 | 필터 | `cond[FIELD::연산자]` | 동일 | `STATBL_ID` / `CLS_ID` / `ITM_ID` / `DTACYCLE_CD` |
 | 응답 | JSON (`data[]` + `totalCount`) | 동일 | JSON 또는 XML (`Type` 지정) |
@@ -251,8 +251,8 @@ export interface Notice {
   winnerDate: string | null
   contractStart: string | null
   contractEnd: string | null
-  minPrice: number | null       // 만원
-  maxPrice: number | null       // 만원
+  minPrice: number | null       // 만원 — 목록 응답에서는 항상 null (아래 주의)
+  maxPrice: number | null       // 만원 — 상세 응답에서만 채워진다
   totalUnits: number | null
   noticeUrl: string | null
 }
@@ -297,6 +297,61 @@ export interface MarketSeries {
 
 **`Notice`에는 `dday`·`status`를 담지 않는다.** 캐시에 구워지면 시간이 지나 틀린 값이 되기 때문이다.
 Route Handler가 응답 시점에 덧붙인다(§6).
+
+#### `status`는 4값이다 (Phase 1 구현 중 추가)
+
+```ts
+export type NoticeStatus = 'upcoming' | 'open' | 'closed' | 'unknown'
+```
+
+접수 일정이 아직 확정되지 않은 공고가 존재한다. 3값 체계에서는 이것이 `open`으로 떨어져
+"접수중 n건"을 오염시킨다.
+
+**판정 원칙: 종료일이 없으면 마감 판정 불가.**
+
+```ts
+if (start && start > today)  status = 'upcoming'   // 시작일이 미래면 종료일 유무와 무관
+else if (!end)               status = 'unknown'    // 종료일 없음 → 판정 불가
+else if (end < today)        status = 'closed'
+else                         status = 'open'
+```
+
+| `receiptStart` | `receiptEnd` | `status` |
+|---|---|---|
+| 미래 | 있음 / 없음 | `upcoming` |
+| 과거 / 없음 | **없음** | `unknown` |
+| 과거 / 없음 | 과거 | `closed` |
+| 과거 / 없음 | 오늘 ~ 미래 | `open` |
+
+"둘 다 `null`일 때만 `unknown`" 으로 잡으면 **시작일만 공고된 케이스**(`start` 있음 + `end` 없음)가
+규칙을 빠져나가 영구 `open` + `dday: null`이 된다. 종료일 기준으로 잡아야 네 경우가 전부 덮인다.
+
+**`status` 쿼리 필터의 허용값은 `open|upcoming|closed` 그대로다** — 응답만 `'unknown'`을 가질 수 있다.
+`unknown` 공고는 필터 없는 상태에서만 목록에 나타난다. 탭을 4개로 늘리지 않는다.
+
+`NoticeStatus`를 4값으로 넓힌 것은 비용이 아니라 이득이다. 컴포넌트에서 `Record<NoticeStatus, ...>`
+또는 `default` 없는 `switch`를 쓰면 상태를 더 늘릴 때 고쳐야 할 지점을 **컴파일러가 전부 나열해준다.**
+`DdayBadge` · `NoticeTable` · `SummaryBar`에서 이 패턴을 유지한다.
+
+#### D-day는 KST 기준으로 계산한다 (Phase 1 구현 중 확정)
+
+`date-fns`의 `differenceInCalendarDays`는 **서버 로컬 캘린더**로 동작한다.
+Vercel 함수는 `TZ=UTC`로 돌기 때문에 그대로 쓰면 한국시간 00:00~09:00 동안 결과가 하루 밀린다
+(마감된 공고가 `dday 0` · `open`으로 나온다).
+
+→ `lib/dday.ts`에 `todayInSeoul(now)` 를 두고 **KST 기준 '오늘'** 과 비교한다.
+`summary`의 `closingThisWeek`·`new` 도 같은 기준을 쓴다.
+**`vitest.config.ts`에서 테스트를 `TZ=UTC`로 돌린다** — 로컬(KST)에서만 통과하는 테스트는
+이 부류 버그를 잡지 못한다.
+
+#### `minPrice`/`maxPrice`는 상세에서만 채워진다 (Phase 1 구현 중 확인)
+
+분양가는 **Detail 응답에 없고 Mdl에만 있다**. Mdl은 `cond`가 `HOUSE_MANAGE_NO`/`PBLANC_NO`만
+지원해서 배치 조회가 불가능하다. 목록은 Detail만 5개 팬아웃하므로 가격을 채울 수 없다.
+
+→ **목록 응답의 `minPrice`/`maxPrice`는 항상 `null`이다.**
+상세(`/api/notices/{id}`)만 Mdl을 조회해 `SupplyRow.price`의 min/max로 채운다.
+Dashboard의 "분양가 범위" 열은 **화면에 보이는 행만 지연 조회**해 채운다(§8).
 
 ### 4.2 공통: 부분 실패 허용
 
@@ -371,12 +426,29 @@ interface NoticeAdapter {
   mdlOperation: string
   dateFormat: 'iso' | 'compact'
   areaKind: 'exclusive' | 'supply'
+
+  // raw 필드명은 여기에만 존재한다
+  condFields: {
+    noticeNo: string          // 'PBLANC_NO'
+    houseManageNo: string     // 'HOUSE_MANAGE_NO'
+    noticeDate: string        // 'RCRIT_PBLANC_DE'
+  }
+
   toNotice(raw: unknown): Notice
   toSupplyRows(raw: unknown[]): SupplyRow[]
+  toRegulation(raw: unknown): Regulation   // APT만 실제 반환, 나머지는 available: false
 }
 
 export const ADAPTERS: Record<NoticeType, NoticeAdapter> = { ... }
 ```
+
+**`condFields`가 왜 필요한가**: `cond[PBLANC_NO::EQ]` 같은 raw 키를 라우트나 클라이언트에
+하드코딩하면 "raw 키를 아는 곳은 어댑터뿐"이 깨진다. 5개 유형이 우연히 같은 cond 필드명을 쓰기 때문에
+동작은 맞지만, **Phase 8에서 어댑터만 고치면 되게 만드는 전제**가 여기서 무너진다.
+라우트는 `` `cond[${adapter.condFields.noticeNo}::EQ]` `` 로 조립한다.
+
+**`toRegulation`도 같은 이유**다. §5가 `regulation.flags[].key`로 raw 키를 응답에 그대로 노출하는
+계약이므로 그 값을 만드는 주체는 어댑터일 수밖에 없다.
 
 ### 4.4 (B) 경쟁률 — 조인 전략
 
@@ -536,11 +608,17 @@ vitest로 **아래에만** 붙인다. UI는 브라우저로 확인한다.
 
 **`summary` 정의** (화면과 어긋나지 않게 여기에 박는다):
 
-| 키 | 정의 |
-|---|---|
-| `open` | `status === 'open'` |
-| `closingThisWeek` | `receiptEnd`가 **오늘 ~ +6일** (롤링 7일 윈도우) |
-| `new` | `noticeDate`가 최근 7일 |
+| 키 | 정의 | `unknown` 공고 |
+|---|---|---|
+| `open` | `status === 'open'` | 제외 |
+| `closingThisWeek` | `receiptEnd`가 **오늘 ~ +6일** (롤링 7일 윈도우) | 제외 (종료일이 없다) |
+| `new` | `noticeDate`가 최근 7일 | **포함** |
+
+`new`에 `unknown`을 포함하는 것은 의도된 동작이다. `new`는 공고일 기준이고, 일정 미정 공고야말로
+"막 뜬 신규 공고"다. 그래서 "신규 5건"인데 status 탭 어디에도 없는 공고가 생길 수 있다.
+
+**`summary`는 `status` 쿼리 필터를 반영하지 않는다.** region·type 필터만 적용한 전체 목록 기준이다.
+status를 반영하면 `?status=open`에서 `summary.open`이 전체 건수와 같아져 현황판이 자기 자신을 세게 된다.
 
 **조회 범위**: `cond[RCRIT_PBLANC_DE::GTE]`로 **모집공고일 직전 3개월**만 받는다.
 개발계정 일일 호출 한도 때문에 전체 조회는 하지 않는다.
@@ -611,7 +689,11 @@ vitest로 **아래에만** 붙인다. UI는 브라우저로 확인한다.
 | 지역 `CLS_ID` 미매핑 | `503 { "error": "REBSTAT_REGION_UNMAPPED" }` |
 | 통계 키 무효 (ERROR-290) | `502 { "error": "REBSTAT_KEY_INVALID" }` |
 | sample 응답 감지 | `502 { "error": "REBSTAT_SAMPLE_RESPONSE" }` |
+| 공고 없음 (Detail 0건) | `404 { "error": "NOTICE_NOT_FOUND" }` |
 | 쿼리 검증 실패 | `400` + zod 이슈 |
+
+`region`·`type`·`status` 모두 **화이트리스트 검증**을 거친다. `region`을 자유 문자열로 두면
+`?region=서울특별시` 같은 오타가 400이 아니라 **조용히 0건**으로 내려간다.
 
 프론트는 **market 계열 503/502를 "섹션 숨김"으로**, notices 503을 전면 안내로 처리한다.
 
@@ -640,7 +722,20 @@ export function dedupe<T>(key: string, fn: () => Promise<T>): Promise<T> { ... }
 ```
 
 Data Cache는 저장은 해주지만 **동시 cold miss를 합쳐주지 않는다.**
+Next가 자동으로 합쳐주는 것은 **단일 요청 처리 안에서** 같은 URL을 중복 호출하는 경우
+(request memoization)이고, 별개 라우트 핸들러 호출 사이에는 적용되지 않는다.
 그래서 in-flight 맵이 별도로 필요하다.
+
+**`dedupe()`는 반드시 상류 호출 경로에 실제로 걸어라.** 배선하지 않고 파일만 두면
+§6이 지켜진다는 착각만 남는다. 미배선 상태에서는 TTL 만료 직후 동시 진입 N개가 각각
+5유형 팬아웃 × 페이지 수만큼 상류를 때린다.
+
+**키는 파라미터별로 분리한다** — 조회 유형 + 조회 시작일을 키에 넣는다. region·type이 다른 요청이
+같은 키로 합쳐지면 결과가 오염된다.
+
+**한계를 알고 쓴다: `dedupe` 맵은 프로세스 단위다.** 서버리스 인스턴스가 여러 개면 인스턴스별로만
+합쳐진다. 상류 호출을 전역 1회로 줄이는 장치가 아니라 **인스턴스 내 중복을 없애는 장치**다.
+기대치를 여기에 맞춰라 — "dedupe 했는데 왜 여전히 중복이 보이나"를 두 번 조사하지 않기 위한 기록이다.
 
 **D-day는 캐시에 굽지 않는다.** 캐시에는 날짜만 담긴 `Notice`가 들어가고,
 Route Handler가 응답 시점의 `Date.now()` 기준으로 `dday`·`status`를 다시 계산해 덧붙인다.
@@ -717,6 +812,31 @@ formatMonth('202501')      // "2025.01"
 - react-query `refetchInterval: 600_000`, `staleTime: 600_000` — 10분 자동 갱신.
 - 임의공급(`OPT`)은 별도 탭을 두지 않고 전체 목록에 포함한다(스펙의 탭 4종을 유지).
 - **통계 키가 없으면 MarketStrip만 사라진다.** 나머지는 정상 동작한다.
+
+### 분양가 범위 열은 지연 조회한다
+
+목록 응답에는 분양가가 없다(§4.1 — Detail에 가격 필드가 없다).
+목록 응답 요소 타입은 `NoticeListItem = Omit<Notice, 'minPrice' | 'maxPrice'>` 로 좁혀
+**"`null`이 값인 척"** 하지 않게 한다. 상세 응답은 `Notice` 그대로다.
+
+→ **화면에 보이는 행만** `/api/notices/{id}` 를 호출해 `minPrice`/`maxPrice`를 채운다.
+
+- react-query로 행별 조회. `staleTime`을 **상세 TTL 30분과 맞춘다** — 목록은 10분, 상세는 30분이라
+  값이 어긋나면 캐시 두 겹이 서로 다른 시점을 본다.
+- 상세 호출 하나가 상류 **2콜**(Detail + Mdl)이다. 뷰포트·페이지네이션으로 동시 조회 행 수를 묶어라.
+- **`dedupe()` 배선이 선결이다.** 행 클릭으로 상세 페이지에 진입하는 것과 지연 조회가 겹치면
+  같은 키로 동시 cold miss가 나 상류를 두 번 때린다.
+- 로드 전에는 스켈레톤을 보여주고, 실패하면 `—` 로 둔다. 목록 전체를 실패로 만들지 않는다.
+- 전량 조회(공고당 Mdl 호출)는 하지 않는다 — 3개월치 수십~수백 건 × 10분 TTL이면
+  개발계정 일일 한도를 넘긴다.
+
+### `unknown` 상태 렌더 규칙
+
+- **`DdayBadge`** — `status`로 분기하고 `dday`는 표시용으로만 쓴다.
+  `unknown` → **"일정 미정" 중립 칩**. `--color-urgent` 금지 — 미정을 긴급으로 보이게 하면 안 된다.
+- **`NoticeTable`** — 접수기간 칸에 "미정". 마감일 정렬은 **null-last** 규칙을 명시한다
+  (안 하면 브라우저별로 튄다).
+- **`DeadlineCards`** — `unknown` 제외. "D-3 이내" 정의상 들어올 수 없다.
 
 ---
 
@@ -943,3 +1063,14 @@ Phase 8에서 다시 확인할 때 기준으로 쓴다.
 | 10 | 통계 지역이 (A)와 다름 | 최상위 세그먼트는 **같은 축약형**. 단 다단계 트리 | 매핑 테이블 유지, `CLS_ID`는 Phase 8에 확보 |
 | 11 | `/api/market/price-index`가 전세를 내리는데 쓰는 화면 없음 | — | RegionMarket 3번째 라인으로 사용 |
 | 12 | `Notice.id` = 공고번호 | Mdl 조인에 `HOUSE_MANAGE_NO`도 필요 | `houseManageNo` 별도 보존, URL은 `PBLANC_NO`만 |
+
+### Phase 1 구현 중 추가로 드러난 것
+
+| # | 설계 | 실제 | 결론 |
+|---|---|---|---|
+| 13 | `NoticeStatus` 3값 | 접수 종료일이 없는 공고가 영구 `open` + `dday: null` | `'unknown'` 추가. 판정 원칙을 "**종료일 없으면 판정 불가**"로 — "둘 다 null"로 잡으면 시작일만 있는 케이스가 새어나간다. 쿼리 필터 enum은 3값 유지 |
+| 14 | D-day를 요청 시각 기준 계산 | `date-fns`가 **서버 로컬 캘린더**를 쓴다 → `TZ=UTC` 배포 시 하루 오차 | `todayInSeoul()` 도입, 테스트를 `TZ=UTC`로 실행 |
+| 15 | `Notice.minPrice`/`maxPrice` | 가격이 Detail에 없고 Mdl에만 있다. Mdl은 배치 조회 불가 | 목록은 항상 `null`, 상세만 채움. Dashboard는 보이는 행만 지연 조회 |
+| 16 | `dedupe()` 있으면 동시 요청 합류 | Next의 자동 합류는 **단일 요청 내** request memoization뿐. 별개 핸들러 호출 간에는 없다. `dedupe` 맵은 **프로세스 단위**라 서버리스 인스턴스별로만 합쳐진다 | 상류 호출 경로에 실제로 배선. 전역 1회가 아니라 인스턴스 내 중복 제거 장치로 기대치 설정 |
+| 17 | `region` 쿼리 검증 | 자유 문자열이면 `?region=서울특별시` 오타가 400이 아니라 조용히 0건 | 17개 화이트리스트 `z.enum` 검증 → 400 |
+| 18 | odcloud 헤더 인증이 `Authorization: {key}` | **`Infuser` 접두어 필수.** 접두어 없으면 유효한 키도 `-401`(키 없음)로 고정 — 키 없음과 구분되지 않는다 | `Authorization: Infuser ${key}`. 더미 키 curl로 확정(`-401`→`-4` 전이가 파싱 경계). 단위 테스트로는 잡히지 않는다 |
