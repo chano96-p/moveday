@@ -10,6 +10,7 @@ import { SupplyTable } from '@/components/SupplyTable'
 import { SpecialSupplyBox } from '@/components/SpecialSupplyBox'
 import { RegulationBox } from '@/components/RegulationBox'
 import { RegionMarket } from '@/components/RegionMarket'
+import { KakaoMap } from '@/components/KakaoMap'
 import { AISection } from '@/components/AISection'
 import { NOTICE_TYPES } from '@/lib/config'
 import { joinCompetition } from '@/lib/applyhome/competitionJoin'
@@ -94,6 +95,7 @@ export default function NoticeDetailPage() {
           공고문 원문 보기 →
         </a>
       )}
+      <KakaoMap address={notice.address} />
       <AISection />
     </main>
   )
