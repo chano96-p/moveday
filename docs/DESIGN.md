@@ -99,7 +99,8 @@ lib/
     adapters/rent.ts
     adapters/opt.ts
     adapters/index.ts               유형 → 오퍼레이션·어댑터 레지스트리
-    competition.ts                  경쟁률·당첨가점 조회 + SupplyRow 조인
+    competition.ts                  경쟁률·당첨가점 조회 (서버 전용)
+    competitionJoin.ts              SupplyRow 조인 (순수 함수, 클라이언트 import 가능)
   rebstat/
     client.ts                       R-ONE 호출 + json→xml 폴백 + sample 감지
     adapter.ts                      row → MarketSeries + mom/yoy 계산
@@ -537,6 +538,22 @@ export const ADAPTERS: Record<NoticeType, NoticeAdapter> = { ... }
 if (rows.length <= 5 && requestedMonths > rows.length) throw new RebstatSampleResponseError()
 ```
 
+**`clampToRange`를 이 판정보다 먼저 실행해야 한다** (Phase 5 구현 중 실측으로 확정).
+
+키가 미적용이면 상류는 **요청 기간과 무관한 고정 표본 5건**을 준다. 그 5건이 요청 창 밖이면:
+
+| 순서 | `months=1` 요청 시 | 결과 |
+|---|---|---|
+| **clamp → 판정** | `isSampleResponse(0, 1)` → `0<=5 && 1>0` | ✅ 잡는다 |
+| 판정 → clamp | `isSampleResponse(5, 1)` → `5<=5`, **`1>5` 거짓** | ❌ 조용히 빈 배열 |
+
+`months`가 5 이하면 `requestedMonths > rowCount` 조건이 자르기 전 건수로는 성립하지 않는다.
+**두 안전장치가 같은 기준(자른 뒤 건수)에서 비교돼야 한다.**
+
+남는 한계: 이력이 희소한 통계표에서 정상 데이터를 오탐할 수 있다(상류 8건 중 3건만 창 안 →
+`3<=5 && 36>3`). 현재 쓰는 통계표는 이력이 길어 해당 없고, Phase 8 체크리스트에
+"정상 키로 호출 시 건수가 5건을 넘는지"로 올려뒀다.
+
 한편 `KEY`에 **잘못된 문자열**을 넣으면 명시적 에러가 온다:
 `{"RESULT":{"CODE":"ERROR-290","MESSAGE":"인증키가 유효하지 않습니다..."}}`
 (스펙 초안이 예상한 `INFO-100`이 아니다.) → 이 코드는 그대로 에러로 매핑한다.
@@ -746,6 +763,17 @@ status를 반영하면 `?status=open`에서 `summary.open`이 전체 건수와 �
 `region`·`type`·`status` 모두 **화이트리스트 검증**을 거친다. `region`을 자유 문자열로 두면
 `?region=서울특별시` 같은 오타가 400이 아니라 **조용히 0건**으로 내려간다.
 
+**market 계열 503이 여러 개 동시에 성립할 때의 순서** (Phase 5 구현 중 확정):
+
+```
+1. REBSTAT_KEY_MISSING      키 없음 — 사용자가 바로 조치할 수 있는 원인
+2. REBSTAT_TABLE_UNKNOWN    통계표 코드 미확정
+3. REBSTAT_REGION_UNMAPPED  지역 CLS_ID 미확정
+```
+
+`real-transaction?region=서울` + 키 없음이면 `KEY_MISSING`이 나온다.
+**가장 실행 가능한 원인을 먼저** 알려주는 순서다.
+
 프론트는 **market 계열 503/502를 "섹션 숨김"으로**, notices 503을 전면 안내로 처리한다.
 
 ---
@@ -853,7 +881,9 @@ formatMonth('202501')      // "2025.01"
 3. **TypeTabs** — APT / 무순위·잔여 / 오피스텔·도시형 / 공공지원 민간임대 / **관심**
 4. **RegionFilter** — 지역 멀티 선택
 5. **NoticeTable** — 주택명 / 지역 / 공급위치 / 접수기간 / D-day / 당첨발표 / 분양가 범위
-6. **MarketStrip** — 선택 지역(기본 전국) 아파트 매매가격지수 최근 24개월 라인 + mom/yoy 배지
+6. **MarketStrip** — 선택 지역(기본 전국) 아파트 매매가격지수 최근 24개월 라인 + mom/yoy 배지.
+   `RegionFilter`가 멀티 선택이므로 **정확히 하나 선택됐을 때만 그 지역**, 0개 또는 2개 이상이면
+   `전국`이다. 첫 선택 지역을 임의로 고르면 "서울+경기를 골랐는데 서울만 보여주는" 상태가 된다.
 
 ### 동작
 
@@ -1028,7 +1058,37 @@ API가 제공하는 규제 플래그는 8개이고 전부 `Y`/`N`이다.
 > 지수는 기준시점을 100으로 한 상대값입니다. 절대 가격이 아닙니다.
 
 3개 라인이 겹치므로 여기서만 상색으로 구분한다(단색 원칙의 유일한 예외).
+**색만으로 구분하지 않는다** — 점선 패턴을 함께 준다. 색은 `@theme` 토큰으로 정의한다.
+
+| 시리즈 | 토큰 |
+|---|---|
+| 매매 | **`--color-line`** — MarketStrip의 단색 라인과 **같은 토큰**을 쓴다 |
+| 전세 | `--color-series-jeonse` |
+| 실거래 | `--color-series-real` |
+
+매매에 전용 토큰을 따로 두면 안 된다. 두 화면(MarketStrip · RegionMarket)이 **같은 지수를
+다른 색으로** 보여주게 된다 — 실제로 그렇게 만들었다가 되돌렸다(부록 34).
+`--color-up`/`--color-down`은 상승·하락 전용이므로 시리즈 구분에 재사용하지 않는다.
+
 `실거래가격지수`는 통계표 코드가 미확정이므로 해당 시리즈만 빠진 상태로 렌더될 수 있다.
+**섹션 전체가 사라지면 틀렸다** — 매매·전세 2라인은 나와야 한다.
+
+#### 기준선 100이 실제로 보이는지 확인해야 한다 (Phase 5 구현 중 확정)
+
+`ReferenceLine y={100}`을 넣어도 recharts의 `domain={['auto','auto']}`는 데이터 범위만 보고
+축을 잡는다. 지수가 95~99.7 구간에만 있으면 **100이 축 밖으로 잘려 기준선이 안 보인다.**
+코드만 읽으면 통과로 보이고 화면을 봐야 잡히는 부류다.
+→ Y축 도메인이 **데이터 min/max와 100을 항상 함께 포함**하게 한다.
+
+#### Phase 8까지 RegionMarket은 렌더되지 않는다
+
+`REBSTAT_REGION_CLS_ID`에 `전국`(500001)만 확정돼 있고 **17개 시도가 전부 `null`** 이다.
+모든 실제 공고의 `region`은 시도 단위이므로 이 섹션은 항상 `503 REBSTAT_REGION_UNMAPPED` →
+숨김이다. **설계가 의도한 graceful degradation이고 버그가 아니다.**
+
+**픽스처 모드에서 미매핑 지역을 `전국`으로 대체하는 우회를 만들지 않는다** — 그러면 실제
+매핑 공백이 가려져 Phase 8에서 놓친다. 조용히 숨는 것이 정직한 상태다.
+Phase 8에서 `CLS_ID`를 채우면 코드 변경 없이 살아난다.
 
 ### KakaoMap
 
@@ -1217,3 +1277,14 @@ Phase 8에서 다시 확인할 때 기준으로 쓴다.
 | 27 | `SupplyRow.competition`을 단수(`CompetitionRow`)로 타이핑 | 경쟁률은 **순위 × 거주지역 다차원**이라 단수로 못 담는다 | 대표값 1개 + 보조표기로 우회. 배열 전환은 Phase 8(실제 행 조합 확인 후) |
 | 28 | `resideArea`가 정규화된 값이라고 전제 | `RESIDE_SENM` **원문 그대로**였다. `=== '해당지역'` 비교가 표시 문자열에 로직을 걸고 있었다 — 표기가 바뀌면 조용히 무력화 | `RESIDE_SECD`에서 `resideKind` 도출. §4.0에 판단 기준을 원칙으로 박았다 |
 | 29 | 픽스처 모드가 (B) 오퍼레이션도 서비스한다고 전제 | `OPERATION_FIXTURE_FILE`에 (A) 10개만 있어 (B)는 `return []` → **조용한 전 유형 204** | `COMPETITION_OPERATION_FIXTURE_FILE` + `test/fixtures/competition/` 추가 |
+
+### Phase 5 구현 중 드러난 것
+
+| # | 설계 | 실제 | 결론 |
+|---|---|---|---|
+| 30 | 조인 순수 함수를 `competition.ts`에 두라고 지시 | 그 파일이 `fetchOdcloudAll` → `fixtures.ts` → `node:fs`/`node:path`를 끌고 오는 **서버 전용 모듈**이라, 클라이언트 컴포넌트가 값으로 import하면 `UnhandledSchemeError: node:path`로 빌드가 깨진다 | `competitionJoin.ts`로 분리. 타입만 `import type`으로 참조. **서버 전용 모듈과 클라이언트가 공유할 순수 함수는 파일을 갈라야 한다** |
+| 31 | `ReferenceLine y={100}`으로 기준선 표시 | recharts `domain={['auto','auto']}`가 데이터 범위만 보고 축을 잡아 **100이 잘려 기준선이 안 보인다**. 코드만 읽으면 통과로 보인다 | Y축 도메인이 데이터 min/max와 100을 항상 함께 포함하게 한다 |
+| 32 | MarketStrip은 "선택 지역" | `RegionFilter`가 멀티 선택이라 첫 지역을 고르면 임의적이다 | 정확히 하나일 때만 그 지역, 그 외는 `전국` |
+| 33 | market 503이 3종 | 동시에 성립할 때의 순서가 명세에 없었다 | 키 없음 → 통계표 미확정 → 지역 미매핑 (가장 실행 가능한 원인 먼저) |
+| 34 | 차트 색을 `@theme` 토큰으로 정의 | 매매에 전용 토큰(`--color-series-sale`)을 두자 MarketStrip(`--color-line`)과 **같은 지수가 화면마다 다른 색**이 됐다. 토큰 참조 형식은 지켰지만 값이 갈렸다 | 매매는 `--color-line`을 공용한다. 신규 토큰은 전세·실거래 2개만 |
+| 35 | §4.5⑤ "어댑터에서 항상 요청 기간으로 잘라낸다" | `clampToRange`가 **픽스처 경로에만** 배선돼 프로덕션에서만 `months`가 무효였다. 테스트·브라우저·빌드 전부 통과 | 원격 경로에 배선하고 **`isSampleResponse`보다 먼저** 실행한다(§4.5① 표 참조). 픽스처 early return은 유지 |

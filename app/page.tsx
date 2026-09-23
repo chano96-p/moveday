@@ -6,6 +6,7 @@ import { DeadlineCards } from '@/components/DeadlineCards'
 import { TypeTabs, type DashboardTab } from '@/components/TypeTabs'
 import { RegionFilter } from '@/components/RegionFilter'
 import { NoticeTable } from '@/components/NoticeTable'
+import { MarketStrip } from '@/components/MarketStrip'
 import { useNotices } from '@/hooks/useNotices'
 import { useFavorites } from '@/hooks/useFavorites'
 import type { NoticeType, Region } from '@/lib/types'
@@ -53,6 +54,10 @@ export default function Home() {
         <RegionFilter value={regions} onChange={setRegions} />
         <NoticeTable notices={tableNotices} isLoading={query.isLoading} />
       </div>
+
+      {/* 정확히 한 지역만 골랐을 때만 그 지역, 0개나 2개 이상이면 전국이다(§8) — 두 지역을 골랐는데
+          그중 하나만 보여주면 임의적이다. 여러 지역을 보고 싶어서 고른 사람에게는 전국이 더 정직하다. */}
+      <MarketStrip region={regions.length === 1 ? regions[0] : '전국'} />
     </main>
   )
 }

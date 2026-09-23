@@ -9,8 +9,10 @@
   --color-urgent:     #dc2626;   /* D-3 이내 배지 */
   --color-up:         #16a34a;   /* 상승 변동률 */
   --color-down:       #dc2626;   /* 하락 변동률 */
-  --color-line:       #44403c;   /* 지수 차트 단색 라인 */
+  --color-line:       #44403c;   /* 지수 차트 단색 라인 — RegionMarket 매매도 이걸 그대로 쓴다 */
   --color-line-base:  #d6d3d1;   /* 기준선 100 */
+  --color-series-jeonse: #2563eb;   /* RegionMarket 3라인 예외 — 전세 */
+  --color-series-real:   #b45309;   /* RegionMarket 3라인 예외 — 실거래 */
 }
 
 @theme inline {

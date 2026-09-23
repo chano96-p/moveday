@@ -59,6 +59,12 @@ export function formatMonthDayRange(start: string | null, end: string | null): s
   return ''
 }
 
+export function formatYearMonth(value: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(value)
+  if (!match) return value
+  return `${match[1]}.${match[2]}`
+}
+
 export function formatDateShort(value: string | null): string {
   if (value === null) return '-'
   const match = /^\d{4}-(\d{2})-(\d{2})$/.exec(value)

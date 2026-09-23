@@ -1,6 +1,26 @@
 import { describe, expect, it } from 'vitest'
 import { competitionOperationFor, groupCompetitionRows } from '@/lib/applyhome/competition'
+import { joinCompetition, pickPrimaryCompetition } from '@/lib/applyhome/competitionJoin'
 import { COMPETITION_OPERATIONS } from '@/lib/config'
+import type { CompetitionRow, SupplyRow } from '@/lib/types'
+
+function competitionRow(overrides: Partial<CompetitionRow>): CompetitionRow {
+  return { rankCode: null, resideKind: null, resideArea: null, units: null, requestCount: null, rate: null, rateRaw: '', ...overrides }
+}
+
+function supplyRow(overrides: Partial<SupplyRow>): SupplyRow {
+  return {
+    modelNo: '01',
+    houseType: '',
+    houseTypeKey: '',
+    area: { value: null, kind: 'supply' },
+    generalUnits: null,
+    specialUnits: null,
+    specialBreakdown: null,
+    price: null,
+    ...overrides,
+  }
+}
 
 // 조인 로직은 순수 함수이고 폴백 분기가 있어 §4.6 예외로 테스트한다(팀 리드 승인).
 describe('competitionOperationFor', () => {
@@ -96,5 +116,63 @@ describe('RESIDE_SECD → resideKind 매핑 방향', () => {
 
   it('모르는 코드와 필드 부재는 null이다', () => {
     expect(rowsFor('99').resideKind).toBeNull()
+  })
+})
+
+// groupCompetitionRows와 같은 성격의 순수 함수라 여기 둔다(페이지에 있으면 테스트가 안 된다).
+describe('pickPrimaryCompetition', () => {
+  it('1순위+해당지역이 있으면 그걸 고른다', () => {
+    const rows = [
+      competitionRow({ rankCode: 2, resideKind: 'etcArea', rateRaw: '2.00' }),
+      competitionRow({ rankCode: 1, resideKind: 'corresponding', rateRaw: '1.00' }),
+    ]
+    expect(pickPrimaryCompetition(rows)?.rateRaw).toBe('1.00')
+  })
+
+  it('1순위+해당지역이 없으면 최저 순위를 고른다', () => {
+    const rows = [competitionRow({ rankCode: 2, rateRaw: '2.00' }), competitionRow({ rankCode: 1, rateRaw: '1.00' })]
+    expect(pickPrimaryCompetition(rows)?.rateRaw).toBe('1.00')
+  })
+
+  it('순위가 전혀 없으면(REMNDR/OPT/CancRespl) 첫 항목을 고른다', () => {
+    const rows = [competitionRow({ rateRaw: '3.00' }), competitionRow({ rateRaw: '4.00' })]
+    expect(pickPrimaryCompetition(rows)?.rateRaw).toBe('3.00')
+  })
+
+  it('빈 배열은 undefined다', () => {
+    expect(pickPrimaryCompetition([])).toBeUndefined()
+  })
+})
+
+describe('joinCompetition', () => {
+  it('modelNo로 조인해 competition·score를 채운다', () => {
+    const supply = [supplyRow({ modelNo: '01' })]
+    const result = joinCompetition(supply, {
+      rows: [{ modelNo: '01', houseType: '084A', houseTypeKey: '84A', competition: [competitionRow({ rateRaw: '1.10' })] }],
+      specialSupply: { available: false, byType: [] },
+      joinedBy: 'modelNo',
+    })
+    expect(result[0].competition?.rateRaw).toBe('1.10')
+  })
+
+  it('houseTypeKey로 폴백 조인한다(MODEL_NO 없는 오퍼레이션)', () => {
+    const supply = [supplyRow({ modelNo: '01', houseTypeKey: '59A' })]
+    const result = joinCompetition(supply, {
+      rows: [{ modelNo: null, houseType: '59㎡A', houseTypeKey: '59A', competition: [competitionRow({ rateRaw: '1.50' })] }],
+      specialSupply: { available: false, byType: [] },
+      joinedBy: 'houseTypeKey',
+    })
+    expect(result[0].competition?.rateRaw).toBe('1.50')
+  })
+
+  it('조인 실패는 에러가 아니다 — 원래 행을 그대로 둔다', () => {
+    const supply = [supplyRow({ modelNo: '01' })]
+    const result = joinCompetition(supply, { rows: [], specialSupply: { available: false, byType: [] }, joinedBy: 'modelNo' })
+    expect(result[0].competition).toBeUndefined()
+  })
+
+  it('competition이 undefined면(로딩 전) supply를 그대로 반환한다', () => {
+    const supply = [supplyRow({ modelNo: '01' })]
+    expect(joinCompetition(supply, undefined)).toBe(supply)
   })
 })

@@ -6,6 +6,7 @@ import type { CompetitionRow, Notice, NoticeType, ReceiptArea, WinnerScore } fro
 export interface CompetitionSupplyRow {
   modelNo: string | null
   houseType: string
+  houseTypeKey: string
   competition: CompetitionRow[]
   score?: WinnerScore
 }
@@ -129,7 +130,7 @@ export function groupCompetitionRows(rawRows: Record<string, unknown>[], operati
     const rows = isCancRespl ? toCancResplRows(raw) : [toCompetitionRow(raw)]
     if (rows.length === 0) continue
 
-    const group = groups.get(key) ?? { modelNo, houseType, competition: [] }
+    const group = groups.get(key) ?? { modelNo, houseType, houseTypeKey: normalizeHouseType(houseType), competition: [] }
     group.competition.push(...rows)
     groups.set(key, group)
   }

@@ -1,0 +1,49 @@
+{
+  "SttsApiTblData": [
+    { "head": [{ "list_total_count": 40 }, { "RESULT": { "CODE": "INFO-000", "MESSAGE": "정상 처리되었습니다." } }] },
+    {
+      "row": [
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202306", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 90, "UI_NM": "지수", "WRTTIME_DESC": "2023년 6월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202307", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 90.15, "UI_NM": "지수", "WRTTIME_DESC": "2023년 7월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202308", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 90.3491, "UI_NM": "지수", "WRTTIME_DESC": "2023년 8월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202309", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 90.5918, "UI_NM": "지수", "WRTTIME_DESC": "2023년 9월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202310", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 90.8681, "UI_NM": "지수", "WRTTIME_DESC": "2023년 10월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202311", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 91.1638, "UI_NM": "지수", "WRTTIME_DESC": "2023년 11월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202312", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 91.4632, "UI_NM": "지수", "WRTTIME_DESC": "2023년 12월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202401", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 91.7496, "UI_NM": "지수", "WRTTIME_DESC": "2024년 1월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202402", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.008, "UI_NM": "지수", "WRTTIME_DESC": "2024년 2월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202403", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.2266, "UI_NM": "지수", "WRTTIME_DESC": "2024년 3월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202404", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.3978, "UI_NM": "지수", "WRTTIME_DESC": "2024년 4월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202405", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.5192, "UI_NM": "지수", "WRTTIME_DESC": "2024년 5월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202406", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.594, "UI_NM": "지수", "WRTTIME_DESC": "2024년 6월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202407", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.6305, "UI_NM": "지수", "WRTTIME_DESC": "2024년 7월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202408", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.6411, "UI_NM": "지수", "WRTTIME_DESC": "2024년 8월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202409", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.6413, "UI_NM": "지수", "WRTTIME_DESC": "2024년 9월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202410", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.6474, "UI_NM": "지수", "WRTTIME_DESC": "2024년 10월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202411", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.6754, "UI_NM": "지수", "WRTTIME_DESC": "2024년 11월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202412", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.7387, "UI_NM": "지수", "WRTTIME_DESC": "2024년 12월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202501", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 92.8468, "UI_NM": "지수", "WRTTIME_DESC": "2025년 1월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202502", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 93.0043, "UI_NM": "지수", "WRTTIME_DESC": "2025년 2월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202503", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 93.2104, "UI_NM": "지수", "WRTTIME_DESC": "2025년 3월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202504", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 93.459, "UI_NM": "지수", "WRTTIME_DESC": "2025년 4월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202505", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 93.7391, "UI_NM": "지수", "WRTTIME_DESC": "2025년 5월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202506", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 94.0365, "UI_NM": "지수", "WRTTIME_DESC": "2025년 6월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202507", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 94.3349, "UI_NM": "지수", "WRTTIME_DESC": "2025년 7월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202508", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 94.618, "UI_NM": "지수", "WRTTIME_DESC": "2025년 8월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202509", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 94.8711, "UI_NM": "지수", "WRTTIME_DESC": "2025년 9월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202510", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.0829, "UI_NM": "지수", "WRTTIME_DESC": "2025년 10월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202511", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.2466, "UI_NM": "지수", "WRTTIME_DESC": "2025년 11월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202512", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.3607, "UI_NM": "지수", "WRTTIME_DESC": "2025년 12월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202601", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.4291, "UI_NM": "지수", "WRTTIME_DESC": "2026년 1월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202602", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.4608, "UI_NM": "지수", "WRTTIME_DESC": "2026년 2월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202603", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.4689, "UI_NM": "지수", "WRTTIME_DESC": "2026년 3월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202604", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.4689, "UI_NM": "지수", "WRTTIME_DESC": "2026년 4월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202605", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.4773, "UI_NM": "지수", "WRTTIME_DESC": "2026년 5월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202606", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.5099, "UI_NM": "지수", "WRTTIME_DESC": "2026년 6월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202607", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.5794, "UI_NM": "지수", "WRTTIME_DESC": "2026년 7월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202608", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.6947, "UI_NM": "지수", "WRTTIME_DESC": "2026년 8월" },
+        { "STATBL_ID": "A_2024_00050", "DTACYCLE_CD": "MM", "WRTTIME_IDTFR_ID": "202609", "CLS_ID": 500001, "CLS_NM": "전국", "CLS_FULLNM": "전국", "ITM_ID": 100001, "ITM_NM": "지수", "DTA_VAL": 95.8598, "UI_NM": "지수", "WRTTIME_DESC": "2026년 9월" }
+      ]
+    }
+  ]
+}

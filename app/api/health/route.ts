@@ -1,10 +1,11 @@
 import { hasOdcloudKey } from '@/lib/applyhome/client'
 import { isFixtureModeEnabled } from '@/lib/applyhome/fixtures'
+import { hasRebstatKey } from '@/lib/rebstat/client'
 import { REBSTAT_TABLES } from '@/lib/config'
 
 export async function GET() {
   const odcloud = hasOdcloudKey()
-  const rebstat = Boolean(process.env.REB_STAT_API_KEY)
+  const rebstat = hasRebstatKey()
   const kakaoMap = Boolean(process.env.NEXT_PUBLIC_KAKAO_MAP_KEY)
 
   return Response.json({
