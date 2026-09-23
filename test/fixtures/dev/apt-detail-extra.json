@@ -1,0 +1,41 @@
+{
+  "page": 1,
+  "perPage": 10,
+  "totalCount": 1,
+  "currentCount": 1,
+  "matchCount": 1,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026999001",
+      "PBLANC_NO": "2026999001",
+      "HOUSE_NM": "[개발용] 접수마감 미정 공고",
+      "HOUSE_SECD": "10", "HOUSE_SECD_NM": "신혼희망타운",
+      "SUBSCRPT_AREA_CODE": "110", "SUBSCRPT_AREA_CODE_NM": "서울",
+      "HSSPLY_ZIP": "06236",
+      "HSSPLY_ADRES": "서울특별시 강남구 개발용 픽스처",
+      "TOT_SUPLY_HSHLDCO": 40,
+      "RCRIT_PBLANC_DE": "2026-09-16",
+      "RCEPT_BGNDE": "2026-09-15", "RCEPT_ENDDE": null,
+      "SPSPLY_RCEPT_BGNDE": null, "SPSPLY_RCEPT_ENDDE": null,
+      "GNRL_RNK1_CRSPAREA_RCPTDE": null, "GNRL_RNK1_CRSPAREA_ENDDE": null,
+      "GNRL_RNK1_ETC_GG_RCPTDE": null, "GNRL_RNK1_ETC_GG_ENDDE": null,
+      "GNRL_RNK1_ETC_AREA_RCPTDE": null, "GNRL_RNK1_ETC_AREA_ENDDE": null,
+      "GNRL_RNK2_CRSPAREA_RCPTDE": null, "GNRL_RNK2_CRSPAREA_ENDDE": null,
+      "GNRL_RNK2_ETC_GG_RCPTDE": null, "GNRL_RNK2_ETC_GG_ENDDE": null,
+      "GNRL_RNK2_ETC_AREA_RCPTDE": null, "GNRL_RNK2_ETC_AREA_ENDDE": null,
+      "PRZWNER_PRESNATN_DE": null,
+      "CNTRCT_CNCLS_BGNDE": null, "CNTRCT_CNCLS_ENDDE": null,
+      "HMPG_ADRES": "https://www.applyhome.co.kr",
+      "CNSTRCT_ENTRPS_NM": "개발용 픽스처",
+      "MDHS_TELNO": "1600-0000",
+      "BSNS_MBY_NM": "개발용 픽스처",
+      "MVN_PREARNGE_YM": "202812",
+      "SPECLT_RDN_EARTH_AT": "N", "MDAT_TRGET_AREA_SECD": "N", "PARCPRC_ULS_AT": "N",
+      "IMPRMN_BSNS_AT": "N", "PUBLIC_HOUSE_EARTH_AT": "N",
+      "LRSCL_BLDLND_AT": "N", "NPLN_PRVOPR_PUBLIC_HOUSE_AT": "N",
+      "PUBLIC_HOUSE_SPCLW_APPLC_AT": "N",
+      "PBLANC_URL": "https://www.applyhome.co.kr",
+      "NSPRC_NM": null
+    }
+  ]
+}

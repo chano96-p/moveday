@@ -124,6 +124,29 @@ test/
   adapters.test.ts  rebstat-sample.test.ts
 ```
 
+### 2.1 개발용 픽스처 모드
+
+인증키를 받기 전에는 `/api/notices`가 503이라 **브라우저로 화면을 볼 수 없다.**
+설계가 "각 Phase 끝에서 브라우저로 확인"을 요구하므로 개발용 경로를 둔다.
+
+```bash
+MOVEDAY_USE_FIXTURES=1 pnpm dev
+```
+
+- **기본 비활성.** 변수가 없으면 상류를 호출하고, 키가 없으면 503이다.
+- 서버 전용. `NEXT_PUBLIC_` 접두어를 쓰지 않는다.
+- `lib/applyhome/fixtures.ts`가 `test/fixtures/applyhome/*.json`을 읽어 반환한다.
+- **날짜를 오늘 기준으로 시프트한다** — 픽스처 캡처 기준일(2026-09-22)부터 오늘까지의
+  일수만큼 민다. 언제 띄워도 `upcoming`/`open`/`closed`가 재현된다.
+  시프트는 메모리에서만 일어나고 파일은 건드리지 않는다.
+- `test/fixtures/applyhome/` 10개는 **Phase 8에서 실제 응답으로 교체할 대조군이라 수정 금지**다.
+  상태 재현용 추가 픽스처는 `test/fixtures/dev/`에 둔다.
+
+> ⚠️ **8자리 문자열을 날짜로 오인하지 마라.** `MDHS_TELNO`(문의처)의 `"16001004"`가
+> `/^\d{8}$/`에 걸려 `1600-10-04`로 파싱되는 사고가 실제로 있었다. 연도 범위로 걸러낸다.
+> `shiftDateString`은 순수 함수이므로 **§4.6 테스트 범위의 예외로 회귀 케이스 2건**을 둔다
+> (`"16001004"` 불변 / `"20260813"` 시프트).
+
 ---
 
 ## 3. 데이터 소스 3종
@@ -583,10 +606,15 @@ vitest로 **아래에만** 붙인다. UI는 브라우저로 확인한다.
 ```json
 { "ok": true, "time": "2026-09-22T07:00:00.000Z",
   "keys": { "odcloud": true, "rebstat": false, "kakaoMap": true },
-  "rebstatTables": { "sale": true, "jeonse": true, "realTransaction": false } }
+  "rebstatTables": { "sale": true, "jeonse": true, "realTransaction": false },
+  "fixtures": false }
 ```
 
 **키 값은 절대 내리지 않는다.** 존재 여부 불리언만.
+
+`keys.*`는 **실제 환경변수 존재 여부**다. 개발용 픽스처 모드(§2.1)로 돌고 있어도
+키가 없으면 `false`여야 한다 — **없는 키를 있다고 보고하면 나중에 디버깅 비용이 된다.**
+픽스처 모드 여부는 `fixtures` 필드로 따로 노출한다.
 
 ### `GET /api/notices?region=&type=&status=`
 
@@ -830,6 +858,20 @@ formatMonth('202501')      // "2025.01"
 - 전량 조회(공고당 Mdl 호출)는 하지 않는다 — 3개월치 수십~수백 건 × 10분 TTL이면
   개발계정 일일 한도를 넘긴다.
 
+### 탭과 필터의 관계
+
+탭은 **전체 / APT / 무순위·잔여 / 오피스텔·도시형 / 공공지원 민간임대 / 관심** 6개다.
+**기본 활성은 "전체"**. 유형 탭이 4개라는 뜻이고, 임의공급(`OPT`)은 전용 탭 없이 전체 탭에서 보인다
+— 전체 탭이 없으면 `OPT`가 어디에도 안 뜨고 관심 등록 진입점도 사라진다.
+
+**SummaryBar·DeadlineCards·NoticeTable은 같은 `/api/notices` 쿼리 결과 하나를 공유한다.**
+region·type 필터를 바꾸면 세 영역이 함께 변한다(§5 — `summary`는 region·type을 반영한다).
+같은 화면에서 두 번째 목록 쿼리를 만들지 않는다.
+
+**관심 탭만 예외**다. 관심은 서버 필터가 아니라 `localStorage`의 id 목록으로 하는
+**클라이언트 측 필터**라 서버 `summary`가 알 방법이 없다. 관심 탭에서는 **표만** 좁히고
+SummaryBar·DeadlineCards는 현재 region 범위 기준을 유지한다. 의도된 동작이다.
+
 ### `unknown` 상태 렌더 규칙
 
 - **`DdayBadge`** — `status`로 분기하고 `dday`는 표시용으로만 쓴다.
@@ -983,6 +1025,11 @@ export function calcScore(input: ScoreInput): {
 | **6** | 가점 계산기 |
 | **7** | 카카오 지도 + 프로덕션 빌드 + Vercel 배포 점검 |
 
+> ⚠️ **Phase 4 착수 시 확인할 것**: `assertOdcloudKey()`는 픽스처 모드에서 문자열 `'fixture'`를
+> 반환한다. 현재는 `fetchOdcloudPage`가 상류 진입 전에 가로채므로 무해하다. 그러나
+> **경쟁률 클라이언트가 `assertOdcloudKey()`를 직접 호출하면 `Authorization: Infuser fixture`가
+> 실제로 상류로 나간다.** 경쟁률 클라이언트도 픽스처 분기를 상류 호출 앞단에 둬라.
+
 ### Phase 8 (키 수령 후)
 
 1. 세 소스에 `curl`을 날려 실제 응답을 확인한다.
@@ -1074,3 +1121,13 @@ Phase 8에서 다시 확인할 때 기준으로 쓴다.
 | 16 | `dedupe()` 있으면 동시 요청 합류 | Next의 자동 합류는 **단일 요청 내** request memoization뿐. 별개 핸들러 호출 간에는 없다. `dedupe` 맵은 **프로세스 단위**라 서버리스 인스턴스별로만 합쳐진다 | 상류 호출 경로에 실제로 배선. 전역 1회가 아니라 인스턴스 내 중복 제거 장치로 기대치 설정 |
 | 17 | `region` 쿼리 검증 | 자유 문자열이면 `?region=서울특별시` 오타가 400이 아니라 조용히 0건 | 17개 화이트리스트 `z.enum` 검증 → 400 |
 | 18 | odcloud 헤더 인증이 `Authorization: {key}` | **`Infuser` 접두어 필수.** 접두어 없으면 유효한 키도 `-401`(키 없음)로 고정 — 키 없음과 구분되지 않는다 | `Authorization: Infuser ${key}`. 더미 키 curl로 확정(`-401`→`-4` 전이가 파싱 경계). 단위 테스트로는 잡히지 않는다 |
+
+### Phase 2 구현 중 드러난 것
+
+| # | 설계 | 실제 | 결론 |
+|---|---|---|---|
+| 19 | 탭은 유형 4종 + 관심 | 전체 뷰가 없어 `OPT`가 표에 안 뜨고 관심 등록 진입점도 없다 | "전체" 탭 추가, 기본 활성. 유형 탭이 4개라는 뜻으로 해석 |
+| 20 | `summary`는 region·type 반영 | 요약·카드가 별도 무필터 쿼리로 빠져 필터에 반응하지 않았다 | 테이블과 **같은 쿼리 하나**를 공유. 관심 탭만 예외(클라이언트 필터) |
+| 21 | `/api/health`는 키 존재 여부 | 픽스처 모드가 `keys.odcloud`를 `true`로 위장했다 | `keys.*`는 실제 env만. 픽스처 여부는 `fixtures` 필드로 분리 |
+| 22 | 픽스처 날짜 시프트 | `/^\d{8}$/`가 전화번호 `16001004`를 `1600-10-04`로 파싱해 변조. 비날짜 8자리는 `RangeError` → 500 | 연도 범위로 걸러냄. 회귀 테스트 2건을 §4.6 예외로 추가 |
+| 23 | `staleTime`을 상세 TTL 30분과 맞춘다 | `gcTime` 기본값이 **5분**이라 캐시가 stale 되기 전에 수거된다 → 30분이 의도만 남음 | `gcTime`도 `CACHE_TTL.noticeDetail`로 맞춘다 |

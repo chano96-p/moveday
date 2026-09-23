@@ -1,103 +1,58 @@
-import Image from "next/image";
+'use client'
+
+import { useMemo, useState } from 'react'
+import { SummaryBar } from '@/components/SummaryBar'
+import { DeadlineCards } from '@/components/DeadlineCards'
+import { TypeTabs, type DashboardTab } from '@/components/TypeTabs'
+import { RegionFilter } from '@/components/RegionFilter'
+import { NoticeTable } from '@/components/NoticeTable'
+import { useNotices } from '@/hooks/useNotices'
+import { useFavorites } from '@/hooks/useFavorites'
+import type { NoticeType, Region } from '@/lib/types'
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [tab, setTab] = useState<DashboardTab>('ALL')
+  const [regions, setRegions] = useState<Region[]>([])
+  const { favorites } = useFavorites()
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+  // summary는 region·type 필터를 반영한다(§5) — 테이블과 같은 쿼리 결과를 그대로 쓴다.
+  // 관심(FAVORITES)은 서버가 모르는 클라이언트 전용 필터라 type을 안 보내 "전체" 쿼리와 같아진다 —
+  // 그 덕에 관심 탭에서도 SummaryBar·DeadlineCards는 현재 region 범위 기준을 그대로 유지한다(§8).
+  const filterType: NoticeType | undefined = tab === 'ALL' || tab === 'FAVORITES' ? undefined : tab
+  const query = useNotices({ region: regions, type: filterType })
+
+  const tableNotices = useMemo(() => {
+    const rows = query.data?.notices ?? []
+    return tab === 'FAVORITES' ? rows.filter((n) => favorites.includes(n.id)) : rows
+  }, [query.data, tab, favorites])
+
+  if (query.isError) {
+    const message =
+      query.error instanceof Error && query.error.message === 'ODCLOUD_KEY_MISSING'
+        ? '청약홈 인증키가 설정되지 않았습니다. .env에 ODCLOUD_SERVICE_KEY를 설정하세요.'
+        : '공고 정보를 불러올 수 없습니다.'
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-10">
+        <p className="rounded-lg border border-border bg-surface p-6 text-center text-ink-muted">{message}</p>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    )
+  }
+
+  return (
+    <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+      {query.isLoading && <p className="text-ink-muted">불러오는 중…</p>}
+      {query.data && (
+        <>
+          <SummaryBar summary={query.data.summary} />
+          <DeadlineCards notices={query.data.notices} />
+        </>
+      )}
+
+      <div className="space-y-4">
+        <TypeTabs value={tab} onChange={setTab} />
+        <RegionFilter value={regions} onChange={setRegions} />
+        <NoticeTable notices={tableNotices} isLoading={query.isLoading} />
+      </div>
+    </main>
+  )
 }

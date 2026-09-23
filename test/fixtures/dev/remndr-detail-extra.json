@@ -1,0 +1,30 @@
+{
+  "page": 1,
+  "perPage": 10,
+  "totalCount": 1,
+  "currentCount": 1,
+  "matchCount": 1,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026999002",
+      "PBLANC_NO": "2026999002",
+      "HOUSE_NM": "[개발용] 접수중 무순위 공고",
+      "HOUSE_SECD": "04", "HOUSE_SECD_NM": "무순위",
+      "SUBSCRPT_AREA_CODE": "260", "SUBSCRPT_AREA_CODE_NM": "부산",
+      "HSSPLY_ZIP": "48058",
+      "HSSPLY_ADRES": "부산광역시 해운대구 개발용 픽스처",
+      "TOT_SUPLY_HSHLDCO": 3,
+      "RCRIT_PBLANC_DE": "2026-09-07",
+      "SUBSCRPT_RCEPT_BGNDE": "2026-09-12", "SUBSCRPT_RCEPT_ENDDE": "2026-10-12",
+      "SPSPLY_RCEPT_BGNDE": null, "SPSPLY_RCEPT_ENDDE": null,
+      "GNRL_RCEPT_BGNDE": null, "GNRL_RCEPT_ENDDE": null,
+      "PRZWNER_PRESNATN_DE": "2026-10-17",
+      "CNTRCT_CNCLS_BGNDE": "2026-11-01", "CNTRCT_CNCLS_ENDDE": "2026-11-02",
+      "HMPG_ADRES": "https://www.applyhome.co.kr",
+      "BSNS_MBY_NM": "개발용 픽스처",
+      "MDHS_TELNO": "1600-0000",
+      "MVN_PREARNGE_YM": "202801",
+      "PBLANC_URL": "https://www.applyhome.co.kr"
+    }
+  ]
+}

@@ -3,16 +3,20 @@ import { APPLYHOME_OPERATIONS } from '@/lib/config'
 import { ADAPTERS } from '@/lib/applyhome/adapters'
 import { dedupe } from '@/lib/cache'
 import { formatCondDate } from './parse'
+import { fetchFixtureRows, isFixtureModeEnabled } from './fixtures'
 import type { NoticeType } from '@/lib/types'
 
 export const APPLYHOME_DETAIL_BASE = 'https://api.odcloud.kr/api/ApplyhomeInfoDetailSvc/v1'
 export const APPLYHOME_CMPET_BASE = 'https://api.odcloud.kr/api/ApplyhomeInfoCmpetRtSvc/v1'
 
+// 실제 키 존재 여부 그대로다 — 픽스처 모드가 이 값을 대신 참으로 바꾸면
+// "없는 키를 있다고" 보고하게 된다. `/api/health`가 이 값을 그대로 노출한다.
 export function hasOdcloudKey(): boolean {
   return Boolean(process.env.ODCLOUD_SERVICE_KEY)
 }
 
 export function assertOdcloudKey(): string {
+  if (isFixtureModeEnabled()) return 'fixture'
   const key = process.env.ODCLOUD_SERVICE_KEY
   if (!key) throw new OdcloudKeyMissingError()
   return key
@@ -35,6 +39,11 @@ interface FetchPageOptions {
 }
 
 async function fetchOdcloudPage<T>(baseUrl: string, operation: string, options: FetchPageOptions): Promise<OdcloudResponse<T>> {
+  if (isFixtureModeEnabled()) {
+    const rows = fetchFixtureRows(operation, options.cond) as T[]
+    return { page: options.page, perPage: options.perPage, totalCount: rows.length, currentCount: rows.length, matchCount: rows.length, data: rows }
+  }
+
   const key = assertOdcloudKey()
   const url = new URL(`${baseUrl}/${operation}`)
   url.searchParams.set('page', String(options.page))

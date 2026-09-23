@@ -1,4 +1,5 @@
 import { hasOdcloudKey } from '@/lib/applyhome/client'
+import { isFixtureModeEnabled } from '@/lib/applyhome/fixtures'
 import { REBSTAT_TABLES } from '@/lib/config'
 
 export async function GET() {
@@ -10,6 +11,8 @@ export async function GET() {
     ok: true,
     time: new Date().toISOString(),
     keys: { odcloud, rebstat, kakaoMap },
+    // 키가 없어도 개발용 픽스처로 /api/notices가 동작 중인지 화면이 구분할 수 있게 한다.
+    fixtures: isFixtureModeEnabled(),
     rebstatTables: {
       sale: REBSTAT_TABLES.apartmentSalePriceIndex !== null,
       jeonse: REBSTAT_TABLES.apartmentJeonsePriceIndex !== null,

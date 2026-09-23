@@ -42,3 +42,22 @@ export function formatMonth(value: string): string {
   if (!/^\d{6}$/.test(value)) return value
   return `${value.slice(0, 4)}.${value.slice(4, 6)}`
 }
+
+export function formatDateShort(value: string | null): string {
+  if (value === null) return '-'
+  const match = /^\d{4}-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return '-'
+  return `${match[1]}.${match[2]}`
+}
+
+export function formatReceiptRange(start: string | null, end: string | null): string {
+  if (start !== null && end !== null) {
+    return start === end ? formatDateShort(start) : `${formatDateShort(start)} ~ ${formatDateShort(end)}`
+  }
+  if (start !== null) return `${formatDateShort(start)} ~`
+  if (end !== null) return `~ ${formatDateShort(end)}`
+  // 현재 유일한 호출부(NoticeTable.receiptCell)는 status가 unknown이 아닐 때만 이 함수를 부르고,
+  // 그 경우 open/closed는 end가, upcoming은 start가 항상 있어 이 분기에 실질적으로 도달하지 않는다.
+  // 그래도 start/end 둘 다 null인 입력은 타입상 유효하므로 공유 유틸의 방어적 fallback으로 남긴다.
+  return '미정'
+}
