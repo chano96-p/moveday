@@ -43,6 +43,22 @@ export function formatMonth(value: string): string {
   return `${value.slice(0, 4)}.${value.slice(4, 6)}`
 }
 
+export function formatMonthDay(value: string | null): string {
+  if (value === null) return '-'
+  const match = /^\d{4}-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return '-'
+  return `${Number(match[1])}/${Number(match[2])}`
+}
+
+export function formatMonthDayRange(start: string | null, end: string | null): string {
+  if (start !== null && end !== null) {
+    return start === end ? formatMonthDay(start) : `${formatMonthDay(start)} ~ ${formatMonthDay(end)}`
+  }
+  if (start !== null) return formatMonthDay(start)
+  if (end !== null) return formatMonthDay(end)
+  return ''
+}
+
 export function formatDateShort(value: string | null): string {
   if (value === null) return '-'
   const match = /^\d{4}-(\d{2})-(\d{2})$/.exec(value)

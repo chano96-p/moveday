@@ -42,7 +42,8 @@ const FIXTURE_ANCHOR_DATE = '2026-09-22'
 
 // 픽스처 건수가 적어 캐시할 이유가 없다 — `pnpm dev`를 켜둔 채 자정을 넘겨도 매번 다시 계산해
 // 시프트가 하루 어긋나는 일이 없게 한다.
-function shiftDays(): number {
+// 단위 테스트가 결정적 기대값을 계산하려면 이 함수도 필요하다(`test/fixtures.test.ts`).
+export function shiftDays(): number {
   return differenceInCalendarDays(todayInSeoul(), parseISO(FIXTURE_ANCHOR_DATE))
 }
 
