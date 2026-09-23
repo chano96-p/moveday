@@ -1,0 +1,35 @@
+{
+  "page": 1,
+  "perPage": 100,
+  "totalCount": 2,
+  "currentCount": 2,
+  "matchCount": 2,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026930035",
+      "PBLANC_NO": "2026930035",
+      "MODEL_NO": "01",
+      "HOUSE_TY": "84㎡A",
+      "SUPLY_HSHLDCO": 1,
+      "NORMAL_HSHLDCO": 1,
+      "NORMAL_REQ_CNT": "8",
+      "NORMAL_CMPET_RATE": "8.00",
+      "MNYCH_HSHLDCO": null,
+      "MNYCH_REQ_CNT": null,
+      "MNYCH_CMPET_RATE": null
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026930035",
+      "PBLANC_NO": "2026930035",
+      "MODEL_NO": "02",
+      "HOUSE_TY": "99㎡A",
+      "SUPLY_HSHLDCO": 1,
+      "NORMAL_HSHLDCO": 1,
+      "NORMAL_REQ_CNT": "3",
+      "NORMAL_CMPET_RATE": "3.00",
+      "MNYCH_HSHLDCO": null,
+      "MNYCH_REQ_CNT": null,
+      "MNYCH_CMPET_RATE": null
+    }
+  ]
+}

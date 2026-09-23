@@ -719,6 +719,8 @@ reb.or.kr 콘텐츠 페이지의 `S231520283`은 R-ONE `STATBL_ID` 포맷과 달
 - [ ] `perPage` 최대값
 - [ ] `getCancResplLttotPblancCmpet`의 이전기관·기타 필드 존재 여부
 - [ ] `getAPTSpsplyReqstStus`의 "기타" 유형 필드
+- [ ] **`getAPTSpsplyReqstStus`가 공고당 1행인지 주택형별 다행인지** — B-8에 `HOUSE_TY`·`SPSPLY_HSHLDCO`가 있어 주택형별 다행일 수 있다. 현재 구현은 `specialSupplyRows[0]`만 쓰고 픽스처도 `HOUSE_TY: "전체"` 단일 집계행을 가정했다. 다행이면 SpecialSupplyBox를 주택형별로 바꿔야 한다
+- [ ] `CMPET_RATE`가 `null`이고 `REQ_CNT`만 있는 행이 실제로 오는지 — 온다면 경쟁률 셀 표기를 재확인
 - [ ] 필드 타입 (integer / string) 실제 확인
 
 ## (C) 부동산통계

@@ -13,6 +13,7 @@ export function isFixtureModeEnabled(): boolean {
 }
 
 const FIXTURE_DIR = path.join(process.cwd(), 'test/fixtures/applyhome')
+const COMPETITION_FIXTURE_DIR = path.join(process.cwd(), 'test/fixtures/competition')
 const DEV_FIXTURE_DIR = path.join(process.cwd(), 'test/fixtures/dev')
 
 // 오퍼레이션명 → test/fixtures/applyhome 파일명. 이 10개는 Phase 8 대조군이라 건드리지 않는다.
@@ -29,11 +30,26 @@ const OPERATION_FIXTURE_FILE: Record<string, string> = {
   getOPTLttotPblancMdl: 'opt-mdl.json',
 }
 
+// 오퍼레이션명 → test/fixtures/competition 파일명(§3 (B) 8개). `getPblPvtRentLttotPblancCmpet`은
+// 의도적으로 없다 — /api/notices/{id}/competition의 204 경로를 재현하기 위한 것이다(README 참조).
+const COMPETITION_OPERATION_FIXTURE_FILE: Record<string, string> = {
+  getAPTLttotPblancCmpet: 'apt-cmpet.json',
+  getUrbtyOfctlLttotPblancCmpet: 'urbty-cmpet.json',
+  getRemndrLttotPblancCmpet: 'remndr-cmpet.json',
+  getCancResplLttotPblancCmpet: 'canc-respl-cmpet.json',
+  getOPTLttotPblancCmpet: 'opt-cmpet.json',
+  getAptLttotPblancScore: 'apt-score.json',
+  getAPTSpsplyReqstStus: 'apt-special-supply.json',
+}
+
 // 오퍼레이션명 → test/fixtures/dev 추가 픽스처(선택). 기본 10개 픽스처가 전부 마감/예정으로만
 // 치우쳐 있어 `open`·`unknown` 상태를 화면에서 확인할 수 없으므로 유형별로 하나씩 보강한다.
+// `getRemndrLttotPblancMdl`은 Phase 4에서 추가 — REMNDR(HOUSE_SECD=04) dev 공고에 원래
+// Mdl 픽스처가 없어 houseTypeKey 폴백 조인을 화면에서 확인할 방법이 없었다.
 const DEV_EXTRA_FIXTURE_FILE: Record<string, string> = {
   getAPTLttotPblancDetail: 'apt-detail-extra.json',
   getRemndrLttotPblancDetail: 'remndr-detail-extra.json',
+  getRemndrLttotPblancMdl: 'remndr-mdl-extra.json',
 }
 
 // applyhome 픽스처 README가 밝힌 캡처 기준일. 이 날짜를 오늘로 보고 모든 날짜 필드를
@@ -100,10 +116,11 @@ function applyCond(rows: Record<string, unknown>[], cond?: Record<string, string
  * 실제 odcloud 응답과 달리 페이지네이션 없이 전체를 한 번에 준다 — 픽스처 건수가 적어 무관하다.
  */
 export function fetchFixtureRows(operation: string, cond?: Record<string, string>): Record<string, unknown>[] {
-  const filename = OPERATION_FIXTURE_FILE[operation]
+  const filename = OPERATION_FIXTURE_FILE[operation] ?? COMPETITION_OPERATION_FIXTURE_FILE[operation]
   if (!filename) return []
 
-  let rows = readFixtureData(path.join(FIXTURE_DIR, filename))
+  const dir = OPERATION_FIXTURE_FILE[operation] ? FIXTURE_DIR : COMPETITION_FIXTURE_DIR
+  let rows = readFixtureData(path.join(dir, filename))
 
   const extraFilename = DEV_EXTRA_FIXTURE_FILE[operation]
   if (extraFilename) {

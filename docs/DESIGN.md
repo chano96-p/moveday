@@ -239,6 +239,28 @@ R-ONE 통계코드 검색(로그인 후 `/r-one/portal/openapi/openApiGuideCdPag
 
 소스별 함정을 여기서 전부 흡수한다. 화면은 깨끗한 타입만 본다.
 
+### 4.0 정규화의 판단 기준: 값의 집합을 누가 정하는가
+
+**정규화는 필드 이름을 camelCase로 바꾸는 것이 아니다.** 값을 우리가 통제하는 표현으로 바꾸는 것이다.
+이름만 바꾸고 값을 그대로 통과시킨 필드는 **여전히 raw다.**
+
+| 필드 | 값의 출처 | 로직에 쓸 수 있나 |
+|---|---|---|
+| `status` (`NoticeStatus`) | 우리 | ✅ |
+| `resideKind` (`ReceiptArea`) | 우리 | ✅ |
+| `houseTypeKey` (`normalizeHouseType`) | 우리 | ✅ |
+| `region` (17개 화이트리스트 통과) | 우리 | ✅ |
+| `houseType` (`HOUSE_TY` 원문) | API | ❌ 표시용만 |
+| `resideArea` (`RESIDE_SENM`) | API | ❌ 표시용만 |
+| `rateRaw` (`CMPET_RATE` 원문) | API | ❌ 표시용만 |
+
+**표시 문자열에 로직을 걸면 조용히 깨진다.** API가 `"해당지역"` → `"해당 지역"`으로 바꾸면
+에러도 없고 화면도 멀쩡한데 판정만 틀린다. Phase 4에서 `resideArea === '해당지역'` 비교가
+실제로 그 상태였고, `RESIDE_SECD` 코드값에서 `resideKind`를 도출해 해소했다.
+
+**변경이 예고된 축에서는 특히 위험하다** — R-ONE 지역명(§4.5④)은 전남광주통합특별시 출범으로
+표기가 바뀔 수 있다. 그 축은 반드시 `CLS_ID`(숫자 코드) 기준으로 매핑한다.
+
 ### 4.1 공통 타입
 
 ```ts
@@ -295,7 +317,8 @@ export interface SupplyRow {
 
 export interface CompetitionRow {
   rankCode: number | null       // SUBSCRPT_RANK_CODE
-  resideArea: string | null     // RESIDE_SENM
+  resideKind: ReceiptArea | null // RESIDE_SECD(01/02/03)에서 도출 — 로직 판정용
+  resideArea: string | null     // RESIDE_SENM — 표시용만
   units: number | null
   requestCount: number | null
   rate: number | null           // 숫자 파싱 성공 시
@@ -940,7 +963,29 @@ APT는 접수 윈도우가 최대 8개다. 고정 단계로 그릴 수 없다.
 | `URBTY_OFCTL` / `PBL_PVT_RENT` | 전용면적 |
 
 같은 통에 다른 개념을 섞지 않고, 환산 추정도 하지 않는다.
-경쟁률·당첨가점 열은 **데이터가 있을 때만** 렌더한다.
+경쟁률·당첨가점 열은 **데이터가 있을 때만** 렌더한다. 당첨가점은 APT 전용이다.
+
+#### 경쟁률 셀은 대표값 하나 + 보조표기 (Phase 4 구현 중 확정)
+
+`SupplyRow.competition`을 **단수로 타이핑한 것은 설계 결함**이다. 경쟁률은
+**순위 × 거주지역 다차원**(`SUBSCRPT_RANK_CODE` × `RESIDE_SECD`)이라 단수로 담을 수 없다.
+타입을 `CompetitionRow[]`로 바꾸는 것은 **Phase 8로 미룬다** — 현재 픽스처가 합성이라
+실제 행 조합을 모른다. 그때 실제 응답을 보고 판단한다.
+
+그동안은 대표값 하나를 고르고 **무엇의 경쟁률인지 보조표기**한다.
+숫자만 보여주면 1순위 해당지역인지 2순위 기타지역인지 알 수 없고, 그 둘은 크게 다르다.
+
+```
+12.00
+1순위 해당지역
+```
+
+**대표값 선택 순서**: ① 1순위 + `resideKind === 'corresponding'` → ② 최저 순위 → ③ 첫 항목.
+사람들이 인용하는 숫자가 "1순위 해당지역 경쟁률"이다.
+`rankCode`·`resideKind`가 모두 `null`인 유형(`REMNDR`·`OPT`·취소후재공급)은 ③으로 떨어지고
+보조표기를 생략한다.
+
+판정은 `resideKind`(코드 도출)로 하고 표기는 `resideArea`(API 표시명)로 한다 — §4.0.
 
 ### RegulationBox (APT 전용)
 
@@ -1164,3 +1209,11 @@ Phase 8에서 다시 확인할 때 기준으로 쓴다.
 | 24 | 타임라인 단계 순서에 `all`이 없었다 | `all`을 버리면 `URBTY_OFCTL`/`PBL_PVT_RENT`의 접수기간이 통째로 사라지고, 항상 그리면 `REMNDR`에서 `general`과 날짜가 겹쳐 같은 단계가 두 번 나온다 | `all`을 **폴백으로만** 쓴다 — 구체적 윈도우가 없을 때만 "청약접수"로 렌더 |
 | 25 | 규제 플래그는 `Y`인 것만 칩으로 | 전부 `N`인 공고는 빈 박스가 된다 | "해당하는 규제가 없습니다." 표시 + `note` 유지. 규제 없음도 정보다 |
 | 26 | 회귀 테스트를 `toMatch(/^\d{8}$/)`로 고쳤다 | **시프트가 안 돼도 형식은 맞아 통과한다.** 한 구멍을 막으며 다른 구멍을 열었다 | `shiftDays()`를 export해 기대값을 계산하고 `toBe`로 비교 |
+
+### Phase 4 구현 중 드러난 것
+
+| # | 설계 | 실제 | 결론 |
+|---|---|---|---|
+| 27 | `SupplyRow.competition`을 단수(`CompetitionRow`)로 타이핑 | 경쟁률은 **순위 × 거주지역 다차원**이라 단수로 못 담는다 | 대표값 1개 + 보조표기로 우회. 배열 전환은 Phase 8(실제 행 조합 확인 후) |
+| 28 | `resideArea`가 정규화된 값이라고 전제 | `RESIDE_SENM` **원문 그대로**였다. `=== '해당지역'` 비교가 표시 문자열에 로직을 걸고 있었다 — 표기가 바뀌면 조용히 무력화 | `RESIDE_SECD`에서 `resideKind` 도출. §4.0에 판단 기준을 원칙으로 박았다 |
+| 29 | 픽스처 모드가 (B) 오퍼레이션도 서비스한다고 전제 | `OPERATION_FIXTURE_FILE`에 (A) 10개만 있어 (B)는 `return []` → **조용한 전 유형 204** | `COMPETITION_OPERATION_FIXTURE_FILE` + `test/fixtures/competition/` 추가 |

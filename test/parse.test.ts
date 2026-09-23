@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { formatCondDate, normalizeHouseType, parseAmount, parseCount, parseIsoDate } from '@/lib/applyhome/parse'
+import {
+  formatCondDate,
+  normalizeHouseType,
+  parseAmount,
+  parseCompetitionRate,
+  parseCount,
+  parseIsoDate,
+} from '@/lib/applyhome/parse'
 
 describe('parseIsoDate', () => {
   it('compact(YYYYMMDD) 형식을 ISO로 변환한다', () => {
@@ -82,5 +89,23 @@ describe('formatCondDate', () => {
   it('compact 형식 유형(PBL_PVT_RENT/OPT)은 yyyyMMdd로 포맷한다', () => {
     expect(formatCondDate('PBL_PVT_RENT', date)).toBe('20260813')
     expect(formatCondDate('OPT', date)).toBe('20260813')
+  })
+})
+
+describe('parseCompetitionRate', () => {
+  it('숫자 문자열은 rate로 파싱된다', () => {
+    expect(parseCompetitionRate('5.23')).toEqual({ rate: 5.23, rateRaw: '5.23' })
+  })
+
+  it('미달 표기(△)는 rate가 null이고 원문이 rateRaw에 보존된다', () => {
+    expect(parseCompetitionRate('△524')).toEqual({ rate: null, rateRaw: '△524' })
+  })
+
+  it('빈 문자열은 rate가 null이다', () => {
+    expect(parseCompetitionRate('')).toEqual({ rate: null, rateRaw: '' })
+  })
+
+  it('"-"는 rate가 null이다', () => {
+    expect(parseCompetitionRate('-')).toEqual({ rate: null, rateRaw: '-' })
   })
 })

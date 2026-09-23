@@ -54,7 +54,8 @@ export interface SupplyRow {
 
 export interface CompetitionRow {
   rankCode: number | null       // SUBSCRPT_RANK_CODE
-  resideArea: string | null     // RESIDE_SENM
+  resideKind: ReceiptArea | null // RESIDE_SECD에서 도출 — 로직 판정용(표시 문자열에 의존하지 않는다)
+  resideArea: string | null     // RESIDE_SENM — 표시용
   units: number | null
   requestCount: number | null
   rate: number | null           // 숫자 파싱 성공 시

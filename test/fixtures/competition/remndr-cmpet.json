@@ -1,0 +1,18 @@
+{
+  "page": 1,
+  "perPage": 100,
+  "totalCount": 1,
+  "currentCount": 1,
+  "matchCount": 1,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026999002",
+      "PBLANC_NO": "2026999002",
+      "REMNDR_HSHLD_PBLANC_TYCD": "01",
+      "HOUSE_TY": "059.9800A",
+      "SUPLY_HSHLDCO": 3,
+      "REQ_CNT": "45",
+      "CMPET_RATE": "15.00"
+    }
+  ]
+}

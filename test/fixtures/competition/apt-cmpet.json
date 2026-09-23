@@ -1,0 +1,45 @@
+{
+  "page": 1,
+  "perPage": 100,
+  "totalCount": 3,
+  "currentCount": 3,
+  "matchCount": 3,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026820011",
+      "PBLANC_NO": "2026820011",
+      "MODEL_NO": "01",
+      "HOUSE_TY": "55㎡O",
+      "SUPLY_HSHLDCO": 1,
+      "SUBSCRPT_RANK_CODE": 1,
+      "RESIDE_SECD": "01",
+      "RESIDE_SENM": "해당지역",
+      "REQ_CNT": "12",
+      "CMPET_RATE": "12.00"
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026820011",
+      "PBLANC_NO": "2026820011",
+      "MODEL_NO": "01",
+      "HOUSE_TY": "55㎡O",
+      "SUPLY_HSHLDCO": 1,
+      "SUBSCRPT_RANK_CODE": 2,
+      "RESIDE_SECD": "02",
+      "RESIDE_SENM": "기타지역",
+      "REQ_CNT": "30",
+      "CMPET_RATE": "30.00"
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026820011",
+      "PBLANC_NO": "2026820011",
+      "MODEL_NO": "02",
+      "HOUSE_TY": "56㎡O",
+      "SUPLY_HSHLDCO": 60,
+      "SUBSCRPT_RANK_CODE": 1,
+      "RESIDE_SECD": "01",
+      "RESIDE_SENM": "해당지역",
+      "REQ_CNT": "524",
+      "CMPET_RATE": "△524"
+    }
+  ]
+}

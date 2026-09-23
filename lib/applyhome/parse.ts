@@ -57,6 +57,20 @@ export function normalizeHouseType(raw: string): string {
 }
 
 /**
+ * `CMPET_RATE`(경쟁률)를 파싱한다. OAS상 `string` 타입이고, 청약홈 화면에서 미달 시 `△` 표기가
+ * 관측됐다(API 필드에 그대로 들어가는지는 미확인, §4.4). 숫자로 파싱되면 `rate`, 아니면
+ * `rate: null` + `rateRaw`에 원문을 그대로 보존한다. 화면은 `rateRaw`를 보여주고
+ * 정렬·비교는 `rate`에만 적용한다.
+ */
+export function parseCompetitionRate(value: unknown): { rate: number | null; rateRaw: string } {
+  const rateRaw = typeof value === 'string' ? value : value == null ? '' : String(value)
+  const trimmed = rateRaw.trim()
+  const n = Number(trimmed)
+  const rate = trimmed !== '' && Number.isFinite(n) ? n : null
+  return { rate, rateRaw }
+}
+
+/**
  * `cond[RCRIT_PBLANC_DE::GTE]` 등 필터 값에 넣을 날짜를 유형별 형식으로 만든다.
  */
 export function formatCondDate(type: NoticeType, date: Date): string {

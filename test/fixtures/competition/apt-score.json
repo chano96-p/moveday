@@ -1,0 +1,31 @@
+{
+  "page": 1,
+  "perPage": 100,
+  "totalCount": 2,
+  "currentCount": 2,
+  "matchCount": 2,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026820011",
+      "PBLANC_NO": "2026820011",
+      "MODEL_NO": "01",
+      "HOUSE_TY": "55㎡O",
+      "RESIDE_SECD": "01",
+      "RESIDE_SENM": "해당지역",
+      "LWET_SCORE": 64,
+      "TOP_SCORE": 74,
+      "AVRG_SCORE": 68.2
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026820011",
+      "PBLANC_NO": "2026820011",
+      "MODEL_NO": "02",
+      "HOUSE_TY": "56㎡O",
+      "RESIDE_SECD": "01",
+      "RESIDE_SENM": "해당지역",
+      "LWET_SCORE": 55,
+      "TOP_SCORE": 69,
+      "AVRG_SCORE": 60.5
+    }
+  ]
+}

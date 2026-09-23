@@ -1,0 +1,19 @@
+{
+  "page": 1,
+  "perPage": 10,
+  "totalCount": 1,
+  "currentCount": 1,
+  "matchCount": 1,
+  "data": [
+    {
+      "HOUSE_MANAGE_NO": "2026999002",
+      "PBLANC_NO": "2026999002",
+      "MODEL_NO": "01",
+      "HOUSE_TY": "59㎡A",
+      "SUPLY_AR": 59.98,
+      "SUPLY_HSHLDCO": 3,
+      "SPSPLY_HSHLDCO": 0,
+      "LTTOT_TOP_AMOUNT": "21000"
+    }
+  ]
+}
