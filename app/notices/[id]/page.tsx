@@ -78,7 +78,7 @@ export default function NoticeDetailPage() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-      <NoticeHeader notice={notice} />
+      <NoticeHeader notice={notice} supply={supply} />
       <ScheduleTimeline notice={notice} />
       <SupplyTable supply={supply} />
       <SpecialSupplyBox specialSupply={competitionQuery.data?.specialSupply} />
