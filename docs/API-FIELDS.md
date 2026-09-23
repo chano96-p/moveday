@@ -232,12 +232,19 @@ headers: { Authorization: `Infuser ${key}` }   // lib/applyhome/client.ts
 > 스펙 문서는 이 조건을 `HOUSE_DETAIL_SECD`로 표기했는데 APT Detail의 실제 필드명은
 > `HOUSE_DTL_SECD`다 — **공식 문서 자체의 표기 불일치**. 실제 응답 키를 기준으로 한다.
 
-**`HOUSE_TY` 표기 [확정 — 두 형태 관측]**
-스펙 문서: `"084.9500A"` / 라이브 캡처: `"55㎡O"`, `"84㎡A"`
-→ `normalizeHouseType()`으로 정규화한다.
+**`HOUSE_TY` 표기 [확정 — 한 형태뿐. 2026-09-24 정정]**
 
-실측 값: `HOUSE_TY "55㎡O"` 1세대 (`LTTOT_TOP_AMOUNT` 36707),
-`HOUSE_TY "56㎡O"` 60세대 (39358)
+`"055.0000O"` 한 형태만 온다. Mdl 300행 + 경쟁률 300행(고유값 345개) 전수에서 `㎡` 표기 0건.
+
+> ⚠ **이 문서가 Phase 1에서 `"55㎡O"`를 "라이브 캡처"로 기록한 것은 오기였다.**
+> 청약홈 **웹사이트 렌더링**을 API 실측으로 잘못 옮긴 것이다. 같은 공고(`2026820011`)의
+> 실제 API 값은 `055.0000O`다. 이 오기가 픽스처(`apt-mdl.json`)와 정규화 함수
+> (`normalizeHouseType` — "두 형식을 같은 키로")까지 전파됐고, Phase 8에서 전부 제거했다.
+> 조인 키는 이제 원문 트리밍만 한다(`toHouseTypeKey`).
+
+실측 값(`2026820011`): `HOUSE_TY "055.0000O"` `SUPLY_AR "84.0121"` (`LTTOT_TOP_AMOUNT` 36707),
+`HOUSE_TY "056.0000O"` `SUPLY_AR "85.5745"` (39358).
+**`HOUSE_TY`의 선행 숫자는 전용면적이고 `SUPLY_AR`이 공급면적이다** — 두 값이 다르다.
 
 ---
 
@@ -319,7 +326,8 @@ HOUSE_SECD_NM   "불법행위 재공급"
 HSSPLY_ADRES    "충청북도 청주시 서원구 개신동"
 RCRIT_PBLANC_DE "2026-09-21"
 PBLANC_URL      ".../selectAPTRemndrLttotPblancDetailView.do?houseManageNo=2026930035&pblancNo=2026930035"
-주택형 "84㎡A" 1세대 (35550) / "99㎡A" 1세대 (37708)
+주택형 "084.9811C" 1세대 (122202)   ← 2026-09-24 실측으로 교체.
+                                      옛 기록 "84㎡A"/"99㎡A"는 위와 같은 웹사이트 렌더링 오기였다
 ```
 
 **공고문 URL 경로가 APT와 다르다** (`selectAPTRemndrLttotPblancDetailView.do`).

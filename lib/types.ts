@@ -42,7 +42,7 @@ export type NoticeListItem = Omit<Notice, 'minPrice' | 'maxPrice'>
 export interface SupplyRow {
   modelNo: string
   houseType: string             // 원문 표기 그대로 (화면 표시용)
-  houseTypeKey: string          // 정규화 조인 키 (폴백용)
+  houseTypeKey: string          // 조인 키(폴백용) — HOUSE_TY/TP 원문(트리밍만, §4.0 — Phase 8 실측)
   area: { value: number | null; kind: 'exclusive' | 'supply' }
   generalUnits: number | null
   specialUnits: number | null

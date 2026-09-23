@@ -1,6 +1,6 @@
 import { APPLYHOME_CMPET_BASE, fetchOdcloudAll } from '@/lib/applyhome/client'
 import { COMPETITION_OPERATIONS } from '@/lib/config'
-import { normalizeHouseType, parseAmount, parseCompetitionRate, parseCount } from '@/lib/applyhome/parse'
+import { parseAmount, parseCompetitionRate, parseCount, toHouseTypeKey } from '@/lib/applyhome/parse'
 import type { CompetitionRow, Notice, NoticeType, ReceiptArea, WinnerScore } from '@/lib/types'
 
 export interface CompetitionSupplyRow {
@@ -62,7 +62,7 @@ function joinKeyOf(raw: Record<string, unknown>, preferModelNo: boolean): { key:
   const modelNo = raw.MODEL_NO != null && String(raw.MODEL_NO).trim() !== '' ? String(raw.MODEL_NO) : null
   if (preferModelNo && modelNo !== null) return { key: `model:${modelNo}`, modelNo }
   const houseType = typeof raw.HOUSE_TY === 'string' ? raw.HOUSE_TY : ''
-  return { key: `type:${normalizeHouseType(houseType)}`, modelNo: null }
+  return { key: `type:${toHouseTypeKey(houseType)}`, modelNo: null }
 }
 
 // RESIDE_SECD(코드) → ReceiptArea. 표시용 RESIDE_SENM은 API가 표기를 바꿔도 로직이
@@ -130,7 +130,7 @@ export function groupCompetitionRows(rawRows: Record<string, unknown>[], operati
     const rows = isCancRespl ? toCancResplRows(raw) : [toCompetitionRow(raw)]
     if (rows.length === 0) continue
 
-    const group = groups.get(key) ?? { modelNo, houseType, houseTypeKey: normalizeHouseType(houseType), competition: [] }
+    const group = groups.get(key) ?? { modelNo, houseType, houseTypeKey: toHouseTypeKey(houseType), competition: [] }
     group.competition.push(...rows)
     groups.set(key, group)
   }
@@ -223,7 +223,7 @@ export async function fetchCompetitionResult(notice: Notice, revalidate: number)
   }
 
   const rows: CompetitionSupplyRow[] = grouped.map((group) => {
-    const key = group.modelNo !== null && preferModelNo ? `model:${group.modelNo}` : `type:${normalizeHouseType(group.houseType)}`
+    const key = group.modelNo !== null && preferModelNo ? `model:${group.modelNo}` : `type:${toHouseTypeKey(group.houseType)}`
     return { ...group, score: scoreByKey.get(key) }
   })
 

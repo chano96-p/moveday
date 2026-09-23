@@ -1,35 +1,34 @@
 {
   "page": 1,
   "perPage": 100,
-  "totalCount": 2,
-  "currentCount": 2,
-  "matchCount": 2,
+  "totalCount": 1,
+  "currentCount": 1,
+  "matchCount": 1,
   "data": [
     {
-      "HOUSE_MANAGE_NO": "2026930035",
-      "PBLANC_NO": "2026930035",
+      "HOUSE_MANAGE_NO": "2026930040",
+      "PBLANC_NO": "2026930040",
       "MODEL_NO": "01",
-      "HOUSE_TY": "84㎡A",
+      "HOUSE_TY": "084.9811C",
       "SUPLY_HSHLDCO": 1,
       "NORMAL_HSHLDCO": 1,
       "NORMAL_REQ_CNT": "8",
       "NORMAL_CMPET_RATE": "8.00",
-      "MNYCH_HSHLDCO": null,
-      "MNYCH_REQ_CNT": null,
-      "MNYCH_CMPET_RATE": null
-    },
-    {
-      "HOUSE_MANAGE_NO": "2026930035",
-      "PBLANC_NO": "2026930035",
-      "MODEL_NO": "02",
-      "HOUSE_TY": "99㎡A",
-      "SUPLY_HSHLDCO": 1,
-      "NORMAL_HSHLDCO": 1,
-      "NORMAL_REQ_CNT": "3",
-      "NORMAL_CMPET_RATE": "3.00",
-      "MNYCH_HSHLDCO": null,
-      "MNYCH_REQ_CNT": null,
-      "MNYCH_CMPET_RATE": null
+      "MNYCH_HSHLDCO": 0,
+      "MNYCH_REQ_CNT": "0",
+      "MNYCH_CMPET_RATE": "0.00",
+      "NWWDS_HSHLDCO": 0,
+      "NWWDS_REQ_CNT": "0",
+      "NWWDS_CMPET_RATE": "0.00",
+      "LFE_FRST_HSHLDCO": 0,
+      "LFE_FRST_REQ_CNT": "0",
+      "LFE_FRST_CMPET_RATE": "0.00",
+      "OLD_PARNTS_SUPORT_HSHLDCO": 0,
+      "OLD_PARNTS_SUPORT_REQ_CNT": "0",
+      "OLD_PARNTS_SUPORT_CMPET_RATE": "0.00",
+      "INSTT_RECOMEND_HSHLDCO": 0,
+      "INSTT_RECOMEND_REQ_CNT": "0",
+      "INSTT_RECOMEND_CMPET_RATE": "0.00"
     }
   ]
 }

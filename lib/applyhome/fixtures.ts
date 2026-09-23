@@ -54,7 +54,7 @@ const DEV_EXTRA_FIXTURE_FILE: Record<string, string> = {
 
 // applyhome 픽스처 README가 밝힌 캡처 기준일. 이 날짜를 오늘로 보고 모든 날짜 필드를
 // 같은 일수만큼 이동시켜, 언제 `pnpm dev`를 켜도 접수중/예정 케이스가 살아있게 한다.
-const FIXTURE_ANCHOR_DATE = '2026-09-22'
+const FIXTURE_ANCHOR_DATE = '2026-09-24'
 
 // 픽스처 건수가 적어 캐시할 이유가 없다 — `pnpm dev`를 켜둔 채 자정을 넘겨도 매번 다시 계산해
 // 시프트가 하루 어긋나는 일이 없게 한다.

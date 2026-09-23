@@ -41,19 +41,30 @@ export function parseCount(value: unknown): number | null {
 }
 
 /**
- * `HOUSE_TY`(또는 `TP`)를 조인 키로 정규화한다.
- * 선행 숫자에서 소수점 이하를 버리고(정수 ㎡) 말미 영문 접미사를 붙인다.
- * `"084.9500A"`와 `"84㎡A"`가 같은 키(`"84A"`)가 되도록, 두 형식의 소수 정밀도 차이를
- * 흡수하는 것이 목적이다. 화면 표시에는 쓰지 않는다(원문은 `houseType`에 그대로 보존).
+ * `HOUSE_TY`(또는 `TP`)를 조인 키로 쓴다. 트리밍 외에는 원문을 그대로 쓴다.
+ *
+ * 이전에는 `"084.9500A"`와 `"84㎡A"`를 같은 키로 만든다는 이유로 숫자+말미 영문 접미사를
+ * 뽑아 재구성했는데, Phase 8 실측(Detail/Mdl·경쟁률 대량 표본 전수 대조)에서 `㎡` 표기는
+ * API에 실재하지 않았다 — 픽스처가 청약홈 웹사이트 렌더링을 API 실측으로 잘못 기록한
+ * 것이었다. 같은 오퍼레이션 계열의 두 응답(Mdl vs 경쟁률)은 같은 원본 데이터에서 나와
+ * `HOUSE_TY`/`TP` 원문이 항상 그대로 일치했다(모델번호 있는 3개 오퍼레이션 300/300,
+ * 폴백 조인 대상인 REMNDR 249/249, OPT 291/291 — 정규화가 늘려준 매칭이 0건).
+ *
+ * 그리고 그 정규화의 접미사 정규식(`[A-Za-z]+\s*$`)이 숫자로 끝나는 실제 TP 값
+ * (`59A-1`, `84A1`, `84B-1` 등)에서 매칭에 실패해 서로 다른 주택형 6종을 전부 `"84"`로
+ * 뭉개는 조인 충돌을 만들었다. 원문 비교가 더 정확하고 더 단순하므로 트리밍만 한다.
  */
-export function normalizeHouseType(raw: string): string {
-  if (!raw) return ''
-  const numberMatch = raw.match(/(\d+(?:\.\d+)?)/)
-  const suffixMatch = raw.match(/([A-Za-z]+)\s*$/)
-  const suffix = suffixMatch ? suffixMatch[1].toUpperCase() : ''
-  if (!numberMatch) return raw
-  const area = Math.floor(parseFloat(numberMatch[1]))
-  return `${area}${suffix}`
+export function toHouseTypeKey(raw: string): string {
+  return raw.trim()
+}
+
+// 청약홈 응답에서 "값 없음"을 관용적으로 표시하는 자리표시자 집합이다(§4.0 — 값의 집합을
+// 우리가 통제한다). `GP`(군)가 없으면 빈 문자열이 아니라 `"-"`로 온다(Phase 8 실측,
+// PBL_PVT_RENT 100%·URBTY_OFCTL 15%). 필터링 목적으로만 쓴다 — 표시 문자열 자체는 안 바꾼다.
+const BLANK_PLACEHOLDERS = new Set(['-'])
+
+export function isMeaningfulValue(value: string | null | undefined): value is string {
+  return typeof value === 'string' && value !== '' && !BLANK_PLACEHOLDERS.has(value)
 }
 
 /**

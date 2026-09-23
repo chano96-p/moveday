@@ -3,10 +3,11 @@ import type { NoticeAdapter } from './index'
 import { normalizeRegion } from '@/lib/region'
 import {
   computeReceiptBounds,
-  normalizeHouseType,
+  isMeaningfulValue,
   parseAmount,
   parseCount,
   parseIsoDate,
+  toHouseTypeKey,
 } from '@/lib/applyhome/parse'
 
 interface RentDetailRaw {
@@ -81,8 +82,10 @@ function toSupplyRows(rawArray: unknown[]): SupplyRow[] {
     const specialParts = [청년, 신혼, 고령자].filter((v): v is number => v !== null)
     return {
       modelNo: String(raw.MODEL_NO),
-      houseType: [raw.GP, raw.TP].filter(Boolean).join(' '),
-      houseTypeKey: normalizeHouseType(raw.TP),
+      // GP(군)가 없으면 빈 문자열이 아니라 "-"로 온다(Phase 8 실측, PBL_PVT_RENT 100%) —
+      // 걸러내지 않으면 "- 59A-1"처럼 자리표시자가 그대로 샌다.
+      houseType: [raw.GP, raw.TP].filter(isMeaningfulValue).join(' '),
+      houseTypeKey: toHouseTypeKey(raw.TP),
       area: { value: parseAmount(raw.EXCLUSE_AR), kind: 'exclusive' },
       generalUnits: parseCount(raw.GNSPLY_HSHLDCO),
       specialUnits: specialParts.length ? specialParts.reduce((a, b) => a + b, 0) : null,

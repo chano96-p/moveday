@@ -6,18 +6,18 @@
   "matchCount": 2,
   "data": [
     {
-      "HOUSE_MANAGE_NO": "2026700012",
-      "PBLANC_NO": "2026700012",
-      "HOUSE_TY": "59㎡A",
-      "SUPLY_HSHLDCO": 6,
+      "HOUSE_MANAGE_NO": "2026940212",
+      "PBLANC_NO": "2026940212",
+      "HOUSE_TY": "059.9892B",
+      "SUPLY_HSHLDCO": 2,
       "REQ_CNT": "9",
       "CMPET_RATE": "1.50"
     },
     {
-      "HOUSE_MANAGE_NO": "2026700012",
-      "PBLANC_NO": "2026700012",
-      "HOUSE_TY": "074.8200B",
-      "SUPLY_HSHLDCO": 4,
+      "HOUSE_MANAGE_NO": "2026940212",
+      "PBLANC_NO": "2026940212",
+      "HOUSE_TY": "084.9718B",
+      "SUPLY_HSHLDCO": 2,
       "REQ_CNT": "2",
       "CMPET_RATE": "0.50"
     }

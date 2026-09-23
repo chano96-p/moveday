@@ -3,7 +3,7 @@ import type { NoticeAdapter } from './index'
 import { normalizeRegion } from '@/lib/region'
 import {
   computeReceiptBounds,
-  normalizeHouseType,
+  toHouseTypeKey,
   parseAmount,
   parseCount,
   parseIsoDate,
@@ -78,7 +78,7 @@ function toSupplyRows(rawArray: unknown[]): SupplyRow[] {
   return (rawArray as OptMdlRaw[]).map((raw) => ({
     modelNo: String(raw.MODEL_NO),
     houseType: raw.HOUSE_TY,
-    houseTypeKey: normalizeHouseType(raw.HOUSE_TY),
+    houseTypeKey: toHouseTypeKey(raw.HOUSE_TY),
     area: { value: null, kind: 'supply' },
     generalUnits: parseCount(raw.SUPLY_HSHLDCO),
     specialUnits: null,

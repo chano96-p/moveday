@@ -20,7 +20,7 @@ export function pickPrimaryCompetition(rows: CompetitionRow[]): CompetitionRow |
 
 /**
  * `/api/notices/{id}` supply와 `/api/notices/{id}/competition` rows를 조인한다.
- * `houseTypeKey`는 양쪽 다 서버가 이미 계산한 값이다 — 클라이언트가 `normalizeHouseType`을
+ * `houseTypeKey`는 양쪽 다 서버가 이미 계산한 값이다 — 클라이언트가 `toHouseTypeKey`를
  * 다시 부를 필요가 없다(조인 키 재계산은 서버-클라이언트 이중 구현이 되어 어긋날 수 있다).
  */
 export function joinCompetition(supply: SupplyRow[], competition: CompetitionResult | undefined): SupplyRow[] {

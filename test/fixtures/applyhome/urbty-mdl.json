@@ -6,26 +6,26 @@
   "matchCount": 2,
   "data": [
     {
-      "HOUSE_MANAGE_NO": "2026410099",
-      "PBLANC_NO": "2026410099",
-      "MODEL_NO": "01",
-      "GP": "A",
-      "TP": "059.9800A",
-      "EXCLUSE_AR": 59.98,
-      "SUPLY_HSHLDCO": 20,
-      "SUPLY_AMOUNT": "21000",
-      "SUBSCRPT_REQST_AMOUNT": "200"
+      "EXCLUSE_AR": "84.8507",
+      "GP": "-",
+      "HOUSE_MANAGE_NO": "2026950083",
+      "MODEL_NO": "02",
+      "PBLANC_NO": "2026950083",
+      "SUBSCRPT_REQST_AMOUNT": "100",
+      "SUPLY_AMOUNT": "47875",
+      "SUPLY_HSHLDCO": 36,
+      "TP": "84OB"
     },
     {
-      "HOUSE_MANAGE_NO": "2026410099",
-      "PBLANC_NO": "2026410099",
-      "MODEL_NO": "02",
-      "GP": "B",
-      "TP": "084.9500B",
-      "EXCLUSE_AR": 84.95,
-      "SUPLY_HSHLDCO": 15,
-      "SUPLY_AMOUNT": "29,500",
-      "SUBSCRPT_REQST_AMOUNT": "300"
+      "EXCLUSE_AR": "84.6525",
+      "GP": "-",
+      "HOUSE_MANAGE_NO": "2026950083",
+      "MODEL_NO": "01",
+      "PBLANC_NO": "2026950083",
+      "SUBSCRPT_REQST_AMOUNT": "100",
+      "SUPLY_AMOUNT": "49074",
+      "SUPLY_HSHLDCO": 72,
+      "TP": "84OA"
     }
   ]
 }

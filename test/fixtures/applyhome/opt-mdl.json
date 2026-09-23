@@ -1,25 +1,41 @@
 {
   "page": 1,
   "perPage": 10,
-  "totalCount": 2,
-  "currentCount": 2,
-  "matchCount": 2,
+  "totalCount": 4,
+  "currentCount": 4,
+  "matchCount": 4,
   "data": [
     {
-      "HOUSE_MANAGE_NO": "2026700012",
-      "PBLANC_NO": "2026700012",
+      "HOUSE_MANAGE_NO": "2026940212",
+      "HOUSE_TY": "059.9892B",
+      "LTTOT_TOP_AMOUNT": "36,800",
       "MODEL_NO": "01",
-      "HOUSE_TY": "059.9500A",
-      "SUPLY_HSHLDCO": 6,
-      "LTTOT_TOP_AMOUNT": "19000"
+      "PBLANC_NO": "2026940212",
+      "SUPLY_HSHLDCO": 2
     },
     {
-      "HOUSE_MANAGE_NO": "2026700012",
-      "PBLANC_NO": "2026700012",
+      "HOUSE_MANAGE_NO": "2026940212",
+      "HOUSE_TY": "059.9738C",
+      "LTTOT_TOP_AMOUNT": "38,500",
       "MODEL_NO": "02",
-      "HOUSE_TY": "074.8200B",
-      "SUPLY_HSHLDCO": 4,
-      "LTTOT_TOP_AMOUNT": "24500"
+      "PBLANC_NO": "2026940212",
+      "SUPLY_HSHLDCO": 1
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026940212",
+      "HOUSE_TY": "074.9976 ",
+      "LTTOT_TOP_AMOUNT": "48,400",
+      "MODEL_NO": "03",
+      "PBLANC_NO": "2026940212",
+      "SUPLY_HSHLDCO": 2
+    },
+    {
+      "HOUSE_MANAGE_NO": "2026940212",
+      "HOUSE_TY": "084.9718B",
+      "LTTOT_TOP_AMOUNT": "54,500",
+      "MODEL_NO": "04",
+      "PBLANC_NO": "2026940212",
+      "SUPLY_HSHLDCO": 2
     }
   ]
 }

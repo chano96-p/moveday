@@ -57,17 +57,31 @@ describe('groupCompetitionRows', () => {
     expect(model01?.competition).toHaveLength(2)
   })
 
-  it('MODEL_NO가 없으면(getRemndrLttotPblancCmpet/getOPTLttotPblancCmpet) houseTypeKey로 폴백 조인한다', () => {
+  it('MODEL_NO가 없으면(getRemndrLttotPblancCmpet/getOPTLttotPblancCmpet) houseTypeKey(원문)로 폴백 조인한다', () => {
     const rows = groupCompetitionRows(
       [
-        { HOUSE_TY: '084.9500A', REQ_CNT: '5', CMPET_RATE: '1.00' },
-        { HOUSE_TY: '84㎡A', REQ_CNT: '7', CMPET_RATE: '1.50' },
+        { HOUSE_TY: '59A-1', REQ_CNT: '5', CMPET_RATE: '1.00' },
+        { HOUSE_TY: '59A-1', REQ_CNT: '7', CMPET_RATE: '1.50' },
       ],
       COMPETITION_OPERATIONS.OPT,
     )
     expect(rows).toHaveLength(1)
     expect(rows[0].modelNo).toBeNull()
     expect(rows[0].competition).toHaveLength(2)
+  })
+
+  // Phase 8 실측 — 이전 정규화는 숫자로 끝나는 TP 값에서 접미사 정규식이 매칭에 실패해
+  // 서로 다른 주택형을 같은 키로 뭉갰다(84/84A1/84A2/84A-1/84B-1/84C-1 → "84"). 원문
+  // 비교로는 이 값들이 서로 다른 그룹으로 남아야 한다.
+  it('숫자로 끝나는 TP 값끼리는 서로 다른 주택형으로 남는다(조인 충돌 회귀)', () => {
+    const rows = groupCompetitionRows(
+      [
+        { HOUSE_TY: '84A1', REQ_CNT: '5', CMPET_RATE: '1.00' },
+        { HOUSE_TY: '84A-1', REQ_CNT: '7', CMPET_RATE: '1.50' },
+      ],
+      COMPETITION_OPERATIONS.OPT,
+    )
+    expect(rows).toHaveLength(2)
   })
 
   it('취소후재공급(getCancResplLttotPblancCmpet)은 한 행의 유형별 접두어 열을 분해해 여러 CompetitionRow로 만든다', () => {
@@ -148,17 +162,17 @@ describe('joinCompetition', () => {
   it('modelNo로 조인해 competition·score를 채운다', () => {
     const supply = [supplyRow({ modelNo: '01' })]
     const result = joinCompetition(supply, {
-      rows: [{ modelNo: '01', houseType: '084A', houseTypeKey: '84A', competition: [competitionRow({ rateRaw: '1.10' })] }],
+      rows: [{ modelNo: '01', houseType: '084A', houseTypeKey: '084A', competition: [competitionRow({ rateRaw: '1.10' })] }],
       specialSupply: { available: false, byType: [] },
       joinedBy: 'modelNo',
     })
     expect(result[0].competition?.rateRaw).toBe('1.10')
   })
 
-  it('houseTypeKey로 폴백 조인한다(MODEL_NO 없는 오퍼레이션)', () => {
-    const supply = [supplyRow({ modelNo: '01', houseTypeKey: '59A' })]
+  it('houseTypeKey(원문)로 폴백 조인한다(MODEL_NO 없는 오퍼레이션)', () => {
+    const supply = [supplyRow({ modelNo: '01', houseTypeKey: '59A-1' })]
     const result = joinCompetition(supply, {
-      rows: [{ modelNo: null, houseType: '59㎡A', houseTypeKey: '59A', competition: [competitionRow({ rateRaw: '1.50' })] }],
+      rows: [{ modelNo: null, houseType: '59A-1', houseTypeKey: '59A-1', competition: [competitionRow({ rateRaw: '1.50' })] }],
       specialSupply: { available: false, byType: [] },
       joinedBy: 'houseTypeKey',
     })
