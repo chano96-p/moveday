@@ -52,7 +52,7 @@ export default function Home() {
       <div className="space-y-4">
         <TypeTabs value={tab} onChange={setTab} />
         <RegionFilter value={regions} onChange={setRegions} />
-        <NoticeTable notices={tableNotices} isLoading={query.isLoading} />
+        <NoticeTable notices={tableNotices} isLoading={query.isLoading} resetKey={`${tab}:${regions.join(',')}`} />
       </div>
 
       {/* 정확히 한 지역만 골랐을 때만 그 지역, 0개나 2개 이상이면 전국이다(§8) — 두 지역을 골랐는데

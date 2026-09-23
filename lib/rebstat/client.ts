@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser'
-import { RebstatKeyInvalidError, RebstatKeyMissingError, RebstatSampleResponseError } from '@/lib/errors'
+import { RebstatKeyInvalidError, RebstatKeyMissingError, RebstatSampleResponseError, RebstatUpstreamError } from '@/lib/errors'
 import { dedupe } from '@/lib/cache'
 import { isFixtureModeEnabled } from '@/lib/applyhome/fixtures'
 import { fetchFixtureRebstatRows } from './fixtures'
@@ -65,6 +65,9 @@ async function fetchRemoteRows(options: FetchRowsOptions, key: string): Promise<
 
   return dedupe(dedupeKey, async () => {
     const res = await fetch(requestUrl, { next: { revalidate: options.revalidate } })
+    // 5xx에 HTML 오류 페이지가 실리면 검사 없이는 xml 파서가 그럭저럭 파싱해 빈 rows가
+    // 되고, 그게 SAMPLE_RESPONSE로 오보된다 — "상류가 죽었다"가 "키가 미적용됐다"로 둔갑한다.
+    if (!res.ok) throw new Error(`rebstat upstream HTTP ${res.status}`)
     const text = await res.text()
     // Type=json을 명시해도 에러 응답이 xml로 올 수 있다고 보고돼 있다(§4.5② — 이번 조사에서는
     // 재현되지 않았지만 방어로 유지한다). JSON 파싱이 실패하면 xml로 재시도한다.
@@ -84,9 +87,12 @@ export async function fetchRebstatRows(options: FetchRowsOptions): Promise<Rebst
 
   const key = assertRebstatKey()
   const rows = await fetchRemoteRows(options, key).catch((error) => {
-    // extractRebstatRows(순수 함수, lib/errors를 모른다)가 ERROR-290을 문자열로 던진다 —
-    // 여기서 도메인 에러로 바꿔서 라우트의 toErrorResponse가 그대로 처리할 수 있게 한다.
+    // extractRebstatRows(순수 함수, lib/errors를 모른다)가 RESULT.CODE 오류를 문자열로 던진다 —
+    // 여기서 도메인 에러로 바꿔서 라우트의 toErrorResponse가 502(상류 문제)로 처리하게 한다.
+    // 이 두 메시지 외의 예외는 우리 코드의 버그일 수 있으니 그대로 흘려보내 500으로 남긴다 —
+    // 502/500을 구분해야 운영 로그에서 원인을 가른다.
     if (error instanceof Error && error.message === 'REBSTAT_KEY_INVALID') throw new RebstatKeyInvalidError()
+    if (error instanceof Error && error.message.startsWith('rebstat upstream ')) throw new RebstatUpstreamError()
     throw error
   })
 

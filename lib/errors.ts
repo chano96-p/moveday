@@ -51,6 +51,14 @@ export class RebstatSampleResponseError extends AppError {
   }
 }
 
+export class RebstatUpstreamError extends AppError {
+  readonly code = 'REBSTAT_UPSTREAM_ERROR'
+  readonly status = 502
+  constructor() {
+    super('R-ONE이 오류를 반환했습니다.')
+  }
+}
+
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError
 }

@@ -756,7 +756,13 @@ status를 반영하면 `?status=open`에서 `summary.open`이 전체 건수와 �
 | 통계표 코드 미확정 | `503 { "error": "REBSTAT_TABLE_UNKNOWN" }` |
 | 지역 `CLS_ID` 미매핑 | `503 { "error": "REBSTAT_REGION_UNMAPPED" }` |
 | 통계 키 무효 (ERROR-290) | `502 { "error": "REBSTAT_KEY_INVALID" }` |
+| 통계 상류 오류 (그 외 비-`INFO-000`) | `502 { "error": "REBSTAT_UPSTREAM_ERROR" }` |
 | sample 응답 감지 | `502 { "error": "REBSTAT_SAMPLE_RESPONSE" }` |
+
+**`502`와 `500`을 구분한다** — `502`는 상류가 문제, `500`은 **우리 코드가 깨진 것**이다.
+그래서 상류 에러 매핑은 **알려진 형태만 좁게 잡는다**: `REBSTAT_KEY_INVALID`와
+`rebstat upstream <code>` 두 가지뿐이고, 나머지 예외는 그대로 흘려 `500`으로 남긴다.
+전부 `502`로 뭉뚱그리면 이 구분을 도입한 이유 자체가 사라진다.
 | 공고 없음 (Detail 0건) | `404 { "error": "NOTICE_NOT_FOUND" }` |
 | 쿼리 검증 실패 | `400` + zod 이슈 |
 
@@ -1192,6 +1198,11 @@ export function calcScore(input: ScoreInput): {
 3. 테스트를 돌려 필드 차이를 드러낸다.
 4. **어댑터만** 수정한다.
 
+> ⚠️ **상류 실험 전에 `rm -rf .next/cache`를 해라.** 라우트의 `fetch`가
+> `next: { revalidate }`를 쓰므로 응답이 `.next/cache/fetch-cache`에 남는다. 통계는
+> `revalidate: 86400`이라 **이전 실행의 응답이 하루 동안 재생되고 `fetch`가 아예 호출되지
+> 않는다** — 스텁을 바꿔도 로그가 0줄이고 옛 결과가 나와 오탐한다. 실제로 한 번 겪었다.
+
 **확인 우선순위** (미확인 항목이 몰려 있는 곳):
 
 - `URBTY_OFCTL` / `PBL_PVT_RENT` / `OPT` 의 실제 payload — 필드명은 스펙으로 확정됐지만 실측 샘플이 없다
@@ -1223,6 +1234,10 @@ export function calcScore(input: ScoreInput): {
   (C) 실거래 STATBL_ID + 시도 CLS_ID 17개
       └→ lib/config.ts의 null 상수 18개 채우기
           └→ RegionMarket 첫 실검증            ★ 강한 의존
+          └→ real-transaction의 502 경로 확인
+             지금은 STATBL_ID가 null이라 TABLE_UNKNOWN(503)이 먼저 걸려
+             상류에 도달하지 못한다. 상수를 채워야 이 라우트의 상류 오류
+             매핑이 처음 검증된다 — 이번엔 price-index만 실측했다
   (C) START/END_WRTTIME 실제 동작 여부
       └→ clamp-first 오탐 확인 (이력 짧은 통계표)
   (B) 8개 오퍼레이션 실제 raw JSON

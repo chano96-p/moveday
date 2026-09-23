@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { fetchRebstatRows } from '@/lib/rebstat/client'
-import { RebstatSampleResponseError } from '@/lib/errors'
+import { RebstatSampleResponseError, RebstatUpstreamError } from '@/lib/errors'
 
 // 2023-06 ~ 2026-09, 40개월 연속 — 실제 rebstat 픽스처와 같은 폭.
 function fortyMonthsFrom202306(): { WRTTIME_IDTFR_ID: string; DTA_VAL: number }[] {
@@ -32,7 +32,7 @@ describe('fetchRebstatRows — 원격 경로(픽스처 미사용)에서도 요�
   beforeEach(() => {
     delete process.env.MOVEDAY_USE_FIXTURES
     process.env.REB_STAT_API_KEY = 'dummy-test-key'
-    vi.spyOn(global, 'fetch').mockResolvedValue({ text: async () => JSON.stringify(stubUpstreamResponse()) } as Response)
+    vi.spyOn(global, 'fetch').mockResolvedValue({ ok: true, text: async () => JSON.stringify(stubUpstreamResponse()) } as Response)
   })
 
   afterEach(() => {
@@ -87,6 +87,7 @@ describe('fetchRebstatRows — clamp 후 표본 응답 판정(순서 회귀)', (
       DTA_VAL: 90 + i,
     }))
     vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
       text: async () => JSON.stringify({ SttsApiTblData: [{ head: [{ RESULT: { CODE: 'INFO-000' } }] }, { row: sampleRows }] }),
     } as Response)
 
@@ -102,5 +103,73 @@ describe('fetchRebstatRows — clamp 후 표본 응답 판정(순서 회귀)', (
         revalidate: 60,
       }),
     ).rejects.toThrow(RebstatSampleResponseError)
+  })
+})
+
+// ERROR-290(키 무효) 외의 RESULT.CODE도 상류 문제이지 우리 코드 버그가 아니다 — 일반 Error로
+// 새면 라우트가 500으로 떨어져(팀 리드 지적) 로그에서 원인을 못 가른다. 502로 매핑돼야 한다.
+describe('fetchRebstatRows — 그 외 RESULT.CODE는 502로 매핑된다(500 회귀)', () => {
+  beforeEach(() => {
+    delete process.env.MOVEDAY_USE_FIXTURES
+    process.env.REB_STAT_API_KEY = 'dummy-test-key'
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      text: async () => JSON.stringify({ SttsApiTblData: [{ head: [{ RESULT: { CODE: 'ERROR-500', MESSAGE: '서버 오류' } }] }, { row: [] }] }),
+    } as Response)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    delete process.env.REB_STAT_API_KEY
+  })
+
+  it('ERROR-290이 아닌 에러 코드는 RebstatUpstreamError(502)로 던진다', async () => {
+    await expect(
+      fetchRebstatRows({
+        statblId: 'TEST_STATBL_UPSTREAM_ERROR',
+        clsId: 500001,
+        itmId: 100001,
+        dtacycleCd: 'MM',
+        startWrttime: '202609',
+        endWrttime: '202609',
+        months: 1,
+        revalidate: 60,
+      }),
+    ).rejects.toThrow(RebstatUpstreamError)
+  })
+})
+
+// HTTP 레벨 실패(5xx가 HTML 오류 페이지를 실어 보내는 경우)를 검사하지 않으면 xml 파서가
+// 그럭저럭 파싱해 빈 rows가 되고 SAMPLE_RESPONSE로 오보된다 — "상류가 죽었다"가 "키가
+// 미적용됐다"로 둔갑한다. res.ok를 봐서 502로 분류돼야 한다.
+describe('fetchRebstatRows — HTTP 5xx도 502로 매핑된다(SAMPLE_RESPONSE 오보 회귀)', () => {
+  beforeEach(() => {
+    delete process.env.MOVEDAY_USE_FIXTURES
+    process.env.REB_STAT_API_KEY = 'dummy-test-key'
+    vi.spyOn(global, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: async () => '<html><body>Bad Gateway</body></html>',
+    } as Response)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    delete process.env.REB_STAT_API_KEY
+  })
+
+  it('res.ok가 false면 RebstatUpstreamError(502)로 던지고 SAMPLE_RESPONSE로 오보하지 않는다', async () => {
+    await expect(
+      fetchRebstatRows({
+        statblId: 'TEST_STATBL_HTTP_5XX',
+        clsId: 500001,
+        itmId: 100001,
+        dtacycleCd: 'MM',
+        startWrttime: '202609',
+        endWrttime: '202609',
+        months: 36,
+        revalidate: 60,
+      }),
+    ).rejects.toThrow(RebstatUpstreamError)
   })
 })

@@ -30,18 +30,28 @@ function receiptCell(notice: NoticeRow): string {
   }
 }
 
-export function NoticeTable({ notices, isLoading }: { notices: NoticeRow[]; isLoading: boolean }) {
+export function NoticeTable({
+  notices,
+  isLoading,
+  resetKey,
+}: {
+  notices: NoticeRow[]
+  isLoading: boolean
+  resetKey: string
+}) {
   const [page, setPage] = useState(0)
   const sorted = useMemo(() => [...notices].sort(compareByReceiptEnd), [notices])
   const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE))
   const currentPage = Math.min(page, pageCount - 1)
   const pageRows = sorted.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE)
 
-  // 필터가 바뀌어 목록이 바뀌면 1페이지로 되돌린다 — 안 하면 이전 필터에서 보던 페이지 번호가
-  // 그대로 남아 "이전" 버튼이 여러 번 눌러야 반응하는 것처럼 보인다.
+  // 필터가 바뀌면 1페이지로 되돌린다 — 안 하면 이전 필터에서 보던 페이지 번호가 그대로 남아
+  // "이전" 버튼이 여러 번 눌러야 반응하는 것처럼 보인다. `notices` 배열 참조가 아니라
+  // 필터 정체성(resetKey)으로 판단한다 — 관심 탭은 `.filter()`가 매 렌더 새 배열을 만들어서
+  // (10분 refetch마다도 포함) 배열 참조로는 필터가 안 바뀌어도 페이지가 리셋됐다.
   useEffect(() => {
     setPage(0)
-  }, [notices])
+  }, [resetKey])
 
   if (isLoading) return <p className="py-8 text-center text-ink-muted">불러오는 중…</p>
   if (sorted.length === 0) return <p className="py-8 text-center text-ink-muted">조건에 맞는 공고가 없습니다.</p>
