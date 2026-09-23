@@ -50,15 +50,17 @@ export function KakaoMap({ address }: { address: string | null }) {
   const [coords, setCoords] = useState<KakaoCoords | null>(null)
 
   useEffect(() => {
-    // address가 바뀌면 이전 좌표를 즉시 버린다 — 안 그러면 새 지오코딩이 끝나기 전까지
-    // 이 공고 화면에 이전 공고의 위치가 그대로 남는다. 없는 것보다 틀린 것이 나쁘다(§9).
+    // address는 공고 이동이 아니라 **리페치**로 바뀐다. 상세를 열어둔 채 staleTime(30분)이
+    // 지나 재포커스되면 refetchOnWindowFocus(기본 활성)가 돌고, 정정공고로 HSSPLY_ADRES가
+    // 달라지면 같은 인스턴스에서 prop만 갱신된다. 이전 좌표를 여기서 버리지 않으면 새 주소가
+    // 지오코딩에 실패했을 때 setCoords가 영영 불리지 않아 정정 전 위치가 남는다(§9).
     setCoords(null)
     if (!sdkReady || !address) return
     const kakao = window.kakao
     if (!kakao) return
 
-    // 응답이 오기 전에 다른 공고로 이동하면(주소가 바뀌거나 언마운트되면) 낡은 응답이
-    // 새 상세 화면에 좌표를 심지 않도록 막는다.
+    // 위 리페치가 인플라이트 지오코딩과 겹칠 때, 늦게 도착한 이전 주소의 응답이 정정된
+    // 화면에 좌표를 심는 것을 막는다. setCoords(null)로 비운 화면을 이쪽이 다시 채워버린다.
     let cancelled = false
     kakao.maps.load(() => {
       const geocoder = new kakao.maps.services.Geocoder()

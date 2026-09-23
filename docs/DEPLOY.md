@@ -37,6 +37,30 @@ Vercel 프로젝트 설정에 이 변수를 넣지 않는다 — Preview/Product
    프리뷰 도메인 패턴도 함께 등록해야 한다)
 4. 로컬 개발용으로 `http://localhost:3000`도 등록해둔다
 
+**도메인 제한은 포트까지 검사한다(2026-09-24 실측).** `http://localhost:3000`을 등록해도
+`http://localhost:4321`은 거부된다. 다른 포트로 띄울 일이 있으면 그 포트도 따로 등록해야 한다.
+
+```
+Referer: http://localhost:3000/   → HTTP 200  text/javascript   (등록됨)
+Referer: http://localhost:4321/   → HTTP 401  {"errorType":"AccessDeniedError",
+                                    "message":"domain mismatched! caller=http://localhost:4321.
+                                     check out registered web domains."}
+Referer: https://moveday.vercel.app/ → HTTP 401  (배포 도메인 미등록 상태)
+```
+
+**거부됐을 때의 증상이 읽기 어렵다.** 카카오가 `<script>` 요청에 `401 application/json`을
+돌려주면 크롬의 ORB(Opaque Response Blocking)가 응답을 차단해서, 콘솔에는 본문 대신
+`net::ERR_BLOCKED_BY_ORB`만 찍힌다. `window.kakao`가 `undefined`로 남고 KakaoMap은
+아무것도 렌더하지 않는다 — 화면상으로는 "키가 없을 때"와 구분되지 않는다.
+원인을 가르는 한 줄:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  -H 'Referer: https://<배포도메인>/' \
+  "https://dapi.kakao.com/v2/maps/sdk.js?appkey=$KEY&autoload=false&libraries=services"
+# 200이면 도메인 등록 OK(지도가 안 보이는 건 다른 이유), 401이면 도메인 미등록
+```
+
 ## `packageManager: pnpm@11.5.0` 고정 이유
 
 `pnpm-workspace.yaml`의 `allowBuilds`는 **pnpm 11 계열에서 도입된 필드**다(Phase 1 확인).
@@ -73,8 +97,14 @@ Vercel 프로젝트 설정에 이 변수를 넣지 않는다 — Preview/Product
 
 1. `/api/health`를 열어 `keys.*`가 Vercel에 실제로 등록한 키 상태를 반영하는지, `fixtures`가 `false`인지 확인
 2. 대시보드·상세 화면이 실제 데이터로 채워지는지 확인
-3. 지도가 안 보이면: (a) `NEXT_PUBLIC_KAKAO_MAP_KEY`를 넣은 뒤 **재배포했는지**, (b) 카카오 콘솔에 이 도메인이
-   등록됐는지 순서로 확인한다
+2-1. **지도를 https에서 끝까지 태워본 적이 없다.** 카카오 SDK는 페이지 프로토콜을 그대로
+   따르므로(로더 소스의 `"https:" == location.protocol ? "https:" : "http:"`) mixed content
+   차단 위험은 없다고 판단했지만, 로컬 검증은 전부 `http://localhost:3000`에서 했다.
+   배포 후 지도가 뜨는지를 첫 확인 항목으로 둔다
+3. 지도가 안 보이면 콘솔을 먼저 본다. `net::ERR_BLOCKED_BY_ORB`가 보이면 **도메인 미등록**이고
+   (위 curl 한 줄로 확정), 요청 자체가 없으면 `NEXT_PUBLIC_KAKAO_MAP_KEY`를 넣고 **재배포하지
+   않은 것**이다. 요청이 200인데도 지도가 없으면 지오코딩이 주소를 못 찾은 것으로,
+   이건 정상 동작이다(§9 — 실패하면 섹션을 숨긴다)
 
 ## Phase 8 잔여 — 배포 실패가 아니다
 
