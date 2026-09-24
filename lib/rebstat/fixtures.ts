@@ -36,7 +36,7 @@ export function fetchFixtureRebstatRows(options: FixtureRowsOptions): RebstatRow
   if (!filename) return []
 
   const body = JSON.parse(readFileSync(path.join(FIXTURE_DIR, filename), 'utf-8'))
-  const rows = extractRebstatRows<FixtureRow>(body).filter(
+  const rows = extractRebstatRows<FixtureRow>(body).rows.filter(
     (row) => row.CLS_ID === options.clsId && row.ITM_ID === options.itmId && row.DTACYCLE_CD === options.dtacycleCd,
   )
 

@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest'
 import { clampToRange, extractRebstatRows } from '@/lib/rebstat/parse'
 
 describe('extractRebstatRows', () => {
-  it('정상 응답(SttsApiTblData 배열)에서 row를 뽑는다', () => {
+  it('정상 응답(SttsApiTblData 배열)에서 row와 list_total_count를 뽑는다', () => {
     const body = {
       SttsApiTblData: [
         { head: [{ list_total_count: 1 }, { RESULT: { CODE: 'INFO-000', MESSAGE: '정상' } }] },
         { row: [{ WRTTIME_IDTFR_ID: '202601', DTA_VAL: 100 }] },
       ],
     }
-    expect(extractRebstatRows(body)).toEqual([{ WRTTIME_IDTFR_ID: '202601', DTA_VAL: 100 }])
+    expect(extractRebstatRows(body)).toEqual({ rows: [{ WRTTIME_IDTFR_ID: '202601', DTA_VAL: 100 }], listTotalCount: 1 })
   })
 
   it('래퍼 없이 단독으로 오는 에러(ERROR-290)를 던진다', () => {
@@ -26,9 +26,13 @@ describe('extractRebstatRows', () => {
     expect(() => extractRebstatRows(body)).toThrow('REBSTAT_KEY_INVALID')
   })
 
-  it('row가 없으면 빈 배열이다', () => {
+  it('row가 없으면 빈 배열이고 list_total_count가 없으면 null이다', () => {
     const body = { SttsApiTblData: [{ head: [{ RESULT: { CODE: 'INFO-000' } }] }, { row: [] }] }
-    expect(extractRebstatRows(body)).toEqual([])
+    expect(extractRebstatRows(body)).toEqual({ rows: [], listTotalCount: null })
+  })
+
+  it('래퍼가 아예 없으면(에러 코드도 없는 빈 객체) list_total_count는 null이다', () => {
+    expect(extractRebstatRows({})).toEqual({ rows: [], listTotalCount: null })
   })
 })
 

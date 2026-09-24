@@ -31,12 +31,14 @@ export async function GET(request: Request) {
     const jeonseTable = REBSTAT_TABLES.apartmentJeonsePriceIndex
     if (saleTable === null || jeonseTable === null) throw new RebstatTableUnknownError()
 
-    const clsId = clsIdFor(region)
-    if (clsId === null) throw new RebstatRegionUnmappedError()
+    // CLS_ID는 통계표마다 다른 체계를 쓴다(Phase 8 실측) — 매매·전세가 지금은 같은 코드를
+    // 쓰지만, 표별로 따로 조회해야 한 쪽만 바뀌어도 안전하다. 하나라도 없으면 섹션을 숨긴다.
+    const saleClsId = clsIdFor(region, saleTable)
+    const jeonseClsId = clsIdFor(region, jeonseTable)
+    if (saleClsId === null || jeonseClsId === null) throw new RebstatRegionUnmappedError()
 
     const { startWrttime, endWrttime } = monthRangeFor(months)
     const fetchOptions = {
-      clsId,
       itmId: REBSTAT_ITM_INDEX,
       dtacycleCd: REBSTAT_CYCLE_MONTHLY,
       startWrttime,
@@ -46,8 +48,8 @@ export async function GET(request: Request) {
     }
 
     const [saleRows, jeonseRows] = await Promise.all([
-      fetchRebstatRows({ ...fetchOptions, statblId: saleTable }),
-      fetchRebstatRows({ ...fetchOptions, statblId: jeonseTable }),
+      fetchRebstatRows({ ...fetchOptions, statblId: saleTable, clsId: saleClsId }),
+      fetchRebstatRows({ ...fetchOptions, statblId: jeonseTable, clsId: jeonseClsId }),
     ])
 
     return Response.json({

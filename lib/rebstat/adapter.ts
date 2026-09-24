@@ -1,16 +1,19 @@
 import { format, parseISO, subMonths } from 'date-fns'
 import { todayInSeoul } from '@/lib/dday'
-import { REBSTAT_REGION_CLS_ID } from '@/lib/config'
+import { REBSTAT_REGION_CLS_ID, type RebstatTableId } from '@/lib/config'
 import type { MarketSeries, Region } from '@/lib/types'
 import type { RebstatRow } from './parse'
 
 /**
  * 지역명 대신 `CLS_ID`로 매핑한다(§4.0) — `CLS_FULLNM`은 표시용 문자열이고
  * 전남광주통합특별시 출범으로 표기가 바뀔 수 있어 로직 기준으로 쓰면 안 된다.
- * 매핑에 없는 지역(전국 외 16개, Phase 8 확보 전)은 `null` — 라우트가 섹션만 숨긴다(§5).
+ *
+ * `CLS_ID`는 지역만으로 정해지지 않는다 — **통계표(`statblId`)마다 다른 코드 체계**를
+ * 쓴다(Phase 8 실측). `statblId`를 `RebstatTableId`로 받아 어느 표에 대한 요청인지
+ * 타입으로 강제한다 — 다음 통계표를 추가할 때 이 인자를 빼먹으면 컴파일이 깨진다.
  */
-export function clsIdFor(region: Region | '전국'): number | null {
-  return REBSTAT_REGION_CLS_ID[region]
+export function clsIdFor(region: Region | '전국', statblId: RebstatTableId): number | null {
+  return REBSTAT_REGION_CLS_ID[statblId]?.[region] ?? null
 }
 
 /** `months`개월치를 요청하기 위한 `WRTTIME_IDTFR_ID`(YYYYMM) 범위. KST 기준 "오늘"이 끝이다. */

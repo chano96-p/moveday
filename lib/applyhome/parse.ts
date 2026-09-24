@@ -2,16 +2,22 @@ import { format as formatDateFns } from 'date-fns'
 import { DATE_FORMAT_BY_TYPE } from '@/lib/config'
 import type { NoticeType, ReceiptWindow } from '@/lib/types'
 
+// 청약홈 응답에서 "값 없음"을 관용적으로 표시하는 자리표시자 집합이다(§4.0 — 값의 집합을
+// 우리가 통제한다). 자리표시자를 아는 곳을 여기 한 군데로 모은다 — `parseIsoDate`도 이
+// Set을 참조한다. `GP`(군)가 없으면 빈 문자열이 아니라 `"-"`로 온다(Phase 8 실측,
+// PBL_PVT_RENT 100%·URBTY_OFCTL 15%).
+const BLANK_PLACEHOLDERS = new Set(['-'])
+
 /**
  * 청약홈 응답의 날짜 필드를 ISO(`yyyy-MM-dd`)로 정규화한다.
  * 입력 형식은 오퍼레이션마다 `yyyy-MM-dd` 또는 `yyyyMMdd`로 다르지만,
  * 이 함수가 형식을 감지해 항상 같은 출력을 낸다.
- * 빈 문자열 · `"-"` · 공백 · `null` · `undefined` 는 모두 `null`.
+ * 빈 문자열 · `BLANK_PLACEHOLDERS`(`"-"`) · 공백 · `null` · `undefined` 는 모두 `null`.
  */
 export function parseIsoDate(value: unknown): string | null {
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
-  if (trimmed === '' || trimmed === '-') return null
+  if (trimmed === '' || BLANK_PLACEHOLDERS.has(trimmed)) return null
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed
   if (/^\d{8}$/.test(trimmed)) {
     return `${trimmed.slice(0, 4)}-${trimmed.slice(4, 6)}-${trimmed.slice(6, 8)}`
@@ -58,11 +64,7 @@ export function toHouseTypeKey(raw: string): string {
   return raw.trim()
 }
 
-// 청약홈 응답에서 "값 없음"을 관용적으로 표시하는 자리표시자 집합이다(§4.0 — 값의 집합을
-// 우리가 통제한다). `GP`(군)가 없으면 빈 문자열이 아니라 `"-"`로 온다(Phase 8 실측,
-// PBL_PVT_RENT 100%·URBTY_OFCTL 15%). 필터링 목적으로만 쓴다 — 표시 문자열 자체는 안 바꾼다.
-const BLANK_PLACEHOLDERS = new Set(['-'])
-
+// 필터링 목적으로만 쓴다 — 표시 문자열 자체는 안 바꾼다.
 export function isMeaningfulValue(value: string | null | undefined): value is string {
   return typeof value === 'string' && value !== '' && !BLANK_PLACEHOLDERS.has(value)
 }

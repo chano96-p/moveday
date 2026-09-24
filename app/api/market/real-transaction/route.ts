@@ -26,12 +26,12 @@ export async function GET(request: Request) {
   try {
     assertRebstatKey()
 
-    // 공동주택 실거래가격지수는 STATBL_ID가 아직 미확정이다(§4.5③) — 이 라우트는 지금 항상
-    // 503이고, 그게 정상 동작이다. Phase 8에서 코드만 채우면 나머지는 그대로 동작한다.
     const table = REBSTAT_TABLES.apartmentRealTransactionIndex
     if (table === null) throw new RebstatTableUnknownError()
 
-    const clsId = clsIdFor(region)
+    // 실거래는 매매·전세와 CLS_ID 체계가 다르다(Phase 8 실측) — 반드시 이 표(table) 기준으로
+    // 조회해야 한다. clsIdFor(region)처럼 표를 안 주면 다른 표의 코드를 잘못 쓰게 된다.
+    const clsId = clsIdFor(region, table)
     if (clsId === null) throw new RebstatRegionUnmappedError()
 
     const { startWrttime, endWrttime } = monthRangeFor(months)

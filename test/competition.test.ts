@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { competitionOperationFor, groupCompetitionRows } from '@/lib/applyhome/competition'
+import { competitionOperationFor, groupCompetitionRows, toSpecialSupplyByType } from '@/lib/applyhome/competition'
 import { joinCompetition, pickPrimaryCompetition } from '@/lib/applyhome/competitionJoin'
+import { ADAPTERS } from '@/lib/applyhome/adapters'
 import { COMPETITION_OPERATIONS } from '@/lib/config'
 import type { CompetitionRow, SupplyRow } from '@/lib/types'
+
+import remndrMdlExtra from './fixtures/dev/remndr-mdl-extra.json'
+import remndrCmpetDev from './fixtures/competition/remndr-cmpet.json'
 
 function competitionRow(overrides: Partial<CompetitionRow>): CompetitionRow {
   return { rankCode: null, resideKind: null, resideArea: null, units: null, requestCount: null, rate: null, rateRaw: '', ...overrides }
@@ -109,6 +113,30 @@ describe('groupCompetitionRows', () => {
   })
 })
 
+// getAPTSpsplyReqstStus는 공고당 1행이 아니라 주택형별 다행이다(Phase 8 실측) — 첫 행만 쓰면
+// 다른 주택형의 값이 통째로 빠져 공고 전체 건수를 몇 분의 1로 줄여 보여준다(BLOCKER 회귀).
+describe('toSpecialSupplyByType — 주택형별 다행을 공고 전체로 합산한다', () => {
+  it('같은 항목의 배정세대수·접수건수를 주택형 전부에 걸쳐 더한다', () => {
+    const rows = [
+      { MNYCH_HSHLDCO: 4, CRSPAREA_MNYCH_CNT: 1, CTPRVN_MNYCH_CNT: 0, ETC_AREA_MNYCH_CNT: 0 },
+      { MNYCH_HSHLDCO: 3, CRSPAREA_MNYCH_CNT: 0, CTPRVN_MNYCH_CNT: 0, ETC_AREA_MNYCH_CNT: 0 },
+    ]
+    const byType = toSpecialSupplyByType(rows)
+    const mnych = byType.find((r) => r.label === '다자녀')
+    expect(mnych?.units).toBe(7) // 4 + 3, 첫 행만 쓰면 4로 축소됐을 자리
+    expect(mnych?.requestCounts.find((c) => c.area === '해당')?.count).toBe(1)
+  })
+
+  it('한 행만 있으면 이전과 같은 값이다(회귀 없음)', () => {
+    const byType = toSpecialSupplyByType([{ MNYCH_HSHLDCO: 4, CRSPAREA_MNYCH_CNT: 1 }])
+    expect(byType.find((r) => r.label === '다자녀')?.units).toBe(4)
+  })
+
+  it('행이 비어 있으면 빈 배열이다', () => {
+    expect(toSpecialSupplyByType([])).toEqual([])
+  })
+})
+
 // RESIDE_SECD 매핑은 뒤바뀌어도 현재 화면에 증상이 없다(선택 규칙은 '01'만 읽고 표기는
 // resideArea를 쓴다). etcGyeonggi/etcArea를 읽는 로직이 생기는 순간 활성화되는 함정이라
 // 방향을 고정한다 — §4.0의 교훈.
@@ -188,5 +216,20 @@ describe('joinCompetition', () => {
   it('competition이 undefined면(로딩 전) supply를 그대로 반환한다', () => {
     const supply = [supplyRow({ modelNo: '01' })]
     expect(joinCompetition(supply, undefined)).toBe(supply)
+  })
+})
+
+// 리뷰어 NIT — dev 픽스처 쌍(remndr-mdl-extra.json ↔ remndr-cmpet.json)의 HOUSE_TY가 어긋나도
+// 120개 단위 테스트가 전부 통과했다. dev 픽스처는 MOVEDAY_USE_FIXTURES 경로에서만 로드돼
+// 단위 테스트가 못 보기 때문이다. 문자열이 같다가 아니라 실제 파이프라인(어댑터 → 조인)을
+// 태워서 "조인이 성사된다"를 단언한다 — 표기가 바뀌어도 양쪽이 같기만 하면 통과한다.
+describe('dev 픽스처 쌍 — remndr-mdl-extra ↔ remndr-cmpet 폴백 조인', () => {
+  it('실제 어댑터·조인 파이프라인을 태워도 경쟁률이 붙는다', () => {
+    const supply = ADAPTERS.REMNDR.toSupplyRows(remndrMdlExtra.data)
+    const grouped = groupCompetitionRows(remndrCmpetDev.data, COMPETITION_OPERATIONS.REMNDR_04)
+    const result = joinCompetition(supply, { rows: grouped, specialSupply: { available: false, byType: [] }, joinedBy: 'houseTypeKey' })
+
+    expect(result[0].competition).toBeDefined()
+    expect(result[0].competition?.rateRaw).toBe(remndrCmpetDev.data[0].CMPET_RATE)
   })
 })

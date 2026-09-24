@@ -154,29 +154,37 @@ const SPECIAL_SUPPLY_AREA_PREFIXES: { prefix: string; label: string }[] = [
   { prefix: 'ETC_AREA', label: '기타' },
 ]
 
-function toSpecialSupplyByType(raw: Record<string, unknown>): SpecialSupplyByType[] {
+// getAPTSpsplyReqstStus는 공고당 1행이 아니라 주택형별로 여러 행이 온다(Phase 8 실측,
+// 5개 주택형 = 5행). 이 필드는 전부 건수라 공고 전체 합계로 집계하는 것이 유효하다 —
+// 첫 행만 쓰면 다른 주택형의 값이 통째로 빠져 공고 전체 건수를 몇 분의 1로 줄여 보여준다.
+function sumCount(rows: Record<string, unknown>[], field: string): number | null {
+  const values = rows.map((row) => parseCount(row[field])).filter((v): v is number => v !== null)
+  return values.length > 0 ? values.reduce((a, b) => a + b, 0) : null
+}
+
+export function toSpecialSupplyByType(rows: Record<string, unknown>[]): SpecialSupplyByType[] {
   const byArea = SPECIAL_SUPPLY_TYPES.map(({ code, label, hshldcoField }) => ({
     label,
-    units: parseCount(raw[hshldcoField]),
+    units: sumCount(rows, hshldcoField),
     requestCounts: SPECIAL_SUPPLY_AREA_PREFIXES.map(({ prefix, label: areaLabel }) => ({
       area: areaLabel,
-      count: parseCount(raw[`${prefix}_${code}_CNT`]),
+      count: sumCount(rows, `${prefix}_${code}_CNT`),
     })),
   }))
 
   // 기관추천·이전기관은 거주지역 축이 없고 필드명 규칙도 다르다(API-FIELDS B-8 예외).
   const institution: SpecialSupplyByType = {
     label: '기관추천',
-    units: parseCount(raw.INSTT_RECOMEND_HSHLDCO),
+    units: sumCount(rows, 'INSTT_RECOMEND_HSHLDCO'),
     requestCounts: [
-      { area: '당첨결정', count: parseCount(raw.INSTT_RECOMEND_DCSN_CNT) },
-      { area: '예비자', count: parseCount(raw.INSTT_RECOMEND_PREPAR_CNT) },
+      { area: '당첨결정', count: sumCount(rows, 'INSTT_RECOMEND_DCSN_CNT') },
+      { area: '예비자', count: sumCount(rows, 'INSTT_RECOMEND_PREPAR_CNT') },
     ],
   }
   const transfer: SpecialSupplyByType = {
     label: '이전기관',
-    units: parseCount(raw.TRANSR_INSTT_ENFSN_HSHLDCO),
-    requestCounts: [{ area: '접수', count: parseCount(raw.TRANSR_INSTT_ENFSN_CNT) }],
+    units: sumCount(rows, 'TRANSR_INSTT_ENFSN_HSHLDCO'),
+    requestCounts: [{ area: '접수', count: sumCount(rows, 'TRANSR_INSTT_ENFSN_CNT') }],
   }
 
   return [...byArea, institution, transfer].filter(
@@ -227,7 +235,7 @@ export async function fetchCompetitionResult(notice: Notice, revalidate: number)
     return { ...group, score: scoreByKey.get(key) }
   })
 
-  const byType = isApt && specialSupplyRows.length > 0 ? toSpecialSupplyByType(specialSupplyRows[0]) : []
+  const byType = isApt && specialSupplyRows.length > 0 ? toSpecialSupplyByType(specialSupplyRows) : []
   const specialSupply: SpecialSupplyResult = { available: isApt, byType }
 
   // 경쟁률·특별공급 둘 다 비면 이 공고에 대해 보여줄 게 없다 — 204로 끝낸다(§5).

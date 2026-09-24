@@ -3,9 +3,14 @@ import { RebstatKeyInvalidError, RebstatKeyMissingError, RebstatSampleResponseEr
 import { dedupe } from '@/lib/cache'
 import { isFixtureModeEnabled } from '@/lib/applyhome/fixtures'
 import { fetchFixtureRebstatRows } from './fixtures'
-import { clampToRange, extractRebstatRows, isSampleResponse, type RebstatRow } from './parse'
+import { clampToRange, extractRebstatRows, isSampleResponse, type RebstatExtraction, type RebstatRow } from './parse'
 
 export const REBSTAT_BASE = 'https://www.reb.or.kr/r-one/openapi/SttsApiTblData.do'
+
+// 한 번만 호출하고 페이지를 넘기지 않는다 — 월 단위 시계열이라 months(최대 120) 요청이
+// 이 한도를 넘을 수 없다. isSampleResponse가 이 값을 알아야 "한도만큼 받은 것"과
+// "상류가 잘라 보낸 것"을 구분한다.
+const REBSTAT_PAGE_SIZE = 300
 
 // 실제 키 존재 여부 그대로다 — 픽스처 모드가 이 값을 참으로 바꾸면 없는 키를 있다고
 // 보고하게 된다(§5, Phase 2와 같은 원칙). `/api/health`가 이 값을 그대로 노출한다.
@@ -46,12 +51,12 @@ function tryParseJson(text: string): unknown | null {
 
 const xmlParser = new XMLParser({ ignoreAttributes: false })
 
-async function fetchRemoteRows(options: FetchRowsOptions, key: string): Promise<RebstatRow[]> {
+async function fetchRemoteRows(options: FetchRowsOptions, key: string): Promise<RebstatExtraction> {
   const url = new URL(REBSTAT_BASE)
   url.searchParams.set('KEY', key)
   url.searchParams.set('Type', 'json') // 기본값이 xml이라 반드시 명시해야 한다(§4.5②)
   url.searchParams.set('pIndex', '1')
-  url.searchParams.set('pSize', '300')
+  url.searchParams.set('pSize', String(REBSTAT_PAGE_SIZE))
   url.searchParams.set('STATBL_ID', options.statblId)
   url.searchParams.set('DTACYCLE_CD', options.dtacycleCd)
   url.searchParams.set('CLS_ID', String(options.clsId))
@@ -86,7 +91,7 @@ export async function fetchRebstatRows(options: FetchRowsOptions): Promise<Rebst
   if (isFixtureModeEnabled()) return fetchFixtureRebstatRows(options)
 
   const key = assertRebstatKey()
-  const rows = await fetchRemoteRows(options, key).catch((error) => {
+  const { rows, listTotalCount } = await fetchRemoteRows(options, key).catch((error) => {
     // extractRebstatRows(순수 함수, lib/errors를 모른다)가 RESULT.CODE 오류를 문자열로 던진다 —
     // 여기서 도메인 에러로 바꿔서 라우트의 toErrorResponse가 502(상류 문제)로 처리하게 한다.
     // 이 두 메시지 외의 예외는 우리 코드의 버그일 수 있으니 그대로 흘려보내 500으로 남긴다 —
@@ -96,12 +101,14 @@ export async function fetchRebstatRows(options: FetchRowsOptions): Promise<Rebst
     throw error
   })
 
-  // START_WRTTIME/END_WRTTIME을 상류가 실제로 지키는지 검증되지 않았다(§4.5⑤) — clamp를 먼저 한다.
-  // months가 표본 건수(5) 이하일 때, 상류가 기간과 무관한 고정 표본 5건을 주면 자르기 전
-  // 건수로는 `months > rowCount`가 거짓이 되어 못 잡는다(months=1 → 1>5 거짓).
-  const clamped = clampToRange(rows, options.startWrttime, options.endWrttime)
+  // 샘플 판별은 클램프 **전** 건수로 한다. list_total_count는 상류가 서버 측 필터를 적용한 뒤
+  // 보고하는 총건수라, "상류가 자기가 가졌다고 말한 것보다 적게 줬는가"를 재는 값이다.
+  // 클램프 후와 비교하면, 상류가 범위 필터를 무시해 전체를 돌려줬을 때 클램프가 걸러낸 행까지
+  // "잘렸다"로 읽혀 정상 데이터가 SAMPLE_RESPONSE로 버려진다 — 클램프가 존재하는 이유가
+  // 바로 그 시나리오인데 판정이 거꾸로 동작하게 된다.
+  if (isSampleResponse(rows.length, listTotalCount, REBSTAT_PAGE_SIZE)) throw new RebstatSampleResponseError()
 
-  if (isSampleResponse(clamped.length, options.months)) throw new RebstatSampleResponseError()
-
-  return clamped
+  // START_WRTTIME/END_WRTTIME이 실제로 동작하는 것이 Phase 8 실측으로 확인됐지만(§4.5⑤),
+  // 클램프는 값을 지어내지 않고 제거만 하니 실패 방향이 안전한 쪽이라 그대로 둔다.
+  return clampToRange(rows, options.startWrttime, options.endWrttime)
 }
