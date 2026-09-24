@@ -8,6 +8,14 @@ type ScoreForm = Record<keyof ScoreInput, string>
 
 const EMPTY_FORM: ScoreForm = { noHouseYears: '', dependents: '', accountMonths: '' }
 
+/**
+ * 표시용 정규화. 숫자만 남기고 **앞자리 0을 지운다** — 값을 문자열로 들고 있어서 "0"이 있는
+ * 칸에 이어 치면 "03"이 된다(사용자 신고). 값이 0 하나뿐이면 그대로 둔다.
+ */
+function normalizeDigits(raw: string): string {
+  return raw.replace(/[^0-9]/g, '').replace(/^0+(?=\d)/, '')
+}
+
 // 빈 칸·음수·비숫자는 0으로 본다 — HTML5 `min`은 타이핑된 값을 막지 못한다.
 function toNumber(raw: string): number {
   const n = Number(raw)
@@ -53,7 +61,7 @@ function InputRow({
           inputMode="numeric"
           placeholder="0"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => onChange(normalizeDigits(e.target.value))}
           className="w-full min-w-0 bg-transparent text-[15px] font-semibold tabular-nums text-ink placeholder:text-ink-muted focus:outline-none"
         />
         <span className="shrink-0 text-sm font-medium tabular-nums text-ink-sub">
@@ -77,10 +85,13 @@ export default function ScorePage() {
     if (hydrated.current || !loaded) return
     hydrated.current = true
     if (!input) return
+    // 0은 빈 칸으로 되살린다 — "0"을 찍어두면 그 칸에 이어 칠 때마다 같은 문제가 돌아온다.
+    // 빈 칸은 placeholder "0"으로 보이고 점수도 0으로 쳐서 의미가 달라지지 않는다.
+    const show = (value: number) => (value === 0 ? '' : String(value))
     setForm({
-      noHouseYears: String(input.noHouseYears),
-      dependents: String(input.dependents),
-      accountMonths: String(input.accountMonths),
+      noHouseYears: show(input.noHouseYears),
+      dependents: show(input.dependents),
+      accountMonths: show(input.accountMonths),
     })
   }, [loaded, input])
 
