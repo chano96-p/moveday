@@ -18,7 +18,7 @@ const TABS: { key: DashboardTab; label: string }[] = [
 
 export function TypeTabs({ value, onChange }: { value: DashboardTab; onChange: (tab: DashboardTab) => void }) {
   return (
-    <div role="tablist" aria-label="공고 유형" className="flex gap-1 border-b border-border">
+    <div role="tablist" aria-label="공고 유형" className="flex gap-2 overflow-x-auto border-b border-border">
       {TABS.map((tab) => (
         <button
           key={tab.key}
@@ -26,10 +26,10 @@ export function TypeTabs({ value, onChange }: { value: DashboardTab; onChange: (
           role="tab"
           aria-selected={value === tab.key}
           onClick={() => onChange(tab.key)}
-          className={`px-3 py-2 text-sm ${
+          className={`shrink-0 border-b-2 px-4 py-3 text-[15px] whitespace-nowrap transition-colors ${
             value === tab.key
-              ? 'border-b-2 border-ink font-medium text-ink'
-              : 'text-ink-muted hover:text-ink'
+              ? 'border-brand font-bold text-brand'
+              : 'border-transparent font-medium text-ink-sub hover:text-ink'
           }`}
         >
           {tab.label}

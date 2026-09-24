@@ -35,17 +35,30 @@ function domainIncluding100(series: IndexChartSeries[]): [number, number] {
 
 // 지수 차트는 단색 라인 + 기준선(100) 표시가 원칙이다(§7). RegionMarket만 3라인이라 색으로
 // 구분하되, 색각 이상 사용자를 위해 실선·점선 패턴도 함께 쓴다 — 색만으로 구분하지 않는다.
-export function IndexChart({ series, height = 200 }: { series: IndexChartSeries[]; height?: number }) {
+export function IndexChart({
+  series,
+  height = 200,
+  // 대시보드 우측 카드는 축·격자를 지우고 선만 남긴다(Figma `chart-container` 3:221).
+  // 기준선(100)은 §7이 항상 표시하라고 정한 것이라 minimal에서도 유지한다.
+  minimal = false,
+}: {
+  series: IndexChartSeries[]
+  height?: number
+  minimal?: boolean
+}) {
   const data = mergeByMonth(series)
   const showLegend = series.length > 1
   const domain = domainIncluding100(series)
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-        <XAxis dataKey="month" tickFormatter={formatYearMonth} tick={{ fontSize: 11 }} stroke="var(--color-ink-muted)" />
-        <YAxis domain={domain} tick={{ fontSize: 11 }} stroke="var(--color-ink-muted)" width={40} />
+      <LineChart data={data} margin={minimal ? { top: 8, right: 8, left: 8, bottom: 0 } : { top: 8, right: 12, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray={minimal ? '0' : '3 3'} stroke="var(--color-border)" vertical={false} />
+        {!minimal && (
+          <XAxis dataKey="month" tickFormatter={formatYearMonth} tick={{ fontSize: 11 }} stroke="var(--color-ink-muted)" />
+        )}
+        {!minimal && <YAxis domain={domain} tick={{ fontSize: 11 }} stroke="var(--color-ink-muted)" width={40} />}
+        {minimal && <YAxis domain={domain} hide />}
         <ReferenceLine y={100} stroke="var(--color-line-base)" strokeDasharray="4 4" />
         <Tooltip
           labelFormatter={(value) => formatYearMonth(String(value))}
@@ -60,7 +73,9 @@ export function IndexChart({ series, height = 200 }: { series: IndexChartSeries[
             stroke={s.color ?? 'var(--color-line)'}
             strokeDasharray={s.dashArray}
             strokeWidth={2}
+            // minimal은 마지막 점만 찍는다 — 디자인의 active-dot.
             dot={false}
+            activeDot={{ r: 4 }}
             connectNulls
             isAnimationActive={false}
           />

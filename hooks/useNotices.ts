@@ -9,7 +9,7 @@ export type NoticeRow = NoticeListItem & DdayInfo
 
 export interface NoticesResponse {
   notices: NoticeRow[]
-  summary: { open: number; closingThisWeek: number; new: number }
+  summary: { open: number; closingToday: number; closingThisWeek: number; new: number }
   sources: { type: NoticeType; ok: boolean; count?: number; error?: string }[]
   fetchedAt: string
 }

@@ -16,8 +16,10 @@ export function RegionFilter({ value, onChange }: { value: Region[]; onChange: (
         return (
           <label
             key={region}
-            className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${
-              active ? 'border-ink bg-ink text-white' : 'border-border text-ink-muted hover:text-ink'
+            className={`cursor-pointer rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors ${
+              active
+                ? 'border-brand bg-brand-tint text-brand'
+                : 'border-border bg-surface text-ink-sub hover:border-ink-muted'
             }`}
           >
             <input type="checkbox" checked={active} onChange={() => toggle(region)} className="sr-only" />

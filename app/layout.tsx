@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
+import { Gothic_A1 } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { SiteHeader } from "@/components/SiteHeader";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// 디자인이 Gothic A1을 쓴다. 숫자 자리폭이 고르지 않아 표·금액은 `tabular-nums`로 받친다(§7).
+const gothicA1 = Gothic_A1({
+  variable: "--font-gothic-a1",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -26,20 +23,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${gothicA1.variable} antialiased`}>
         <Providers>
-          <header className="border-b border-border bg-surface">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-              <Link href="/" className="font-semibold text-ink">
-                moveday
-              </Link>
-              <Link href="/score" className="text-sm text-ink-muted hover:text-ink">
-                가점 계산기
-              </Link>
-            </div>
-          </header>
+          <SiteHeader />
           {children}
         </Providers>
       </body>

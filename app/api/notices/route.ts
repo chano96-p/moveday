@@ -52,6 +52,11 @@ export async function GET(request: Request) {
 
     const summary = {
       open: notices.filter((n) => computeDday(n.receiptStart, n.receiptEnd, now).status === 'open').length,
+      // 오늘 마감 = receiptEnd가 오늘. 화면이 이 숫자를 재계산하지 않도록 서버가 준다(§8).
+      closingToday: notices.filter((n) => {
+        if (!n.receiptEnd) return false
+        return differenceInCalendarDays(parseISO(n.receiptEnd), today) === 0
+      }).length,
       closingThisWeek: notices.filter((n) => {
         if (!n.receiptEnd) return false
         const diff = differenceInCalendarDays(parseISO(n.receiptEnd), today)
