@@ -1,10 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useScore } from '@/hooks/useScore'
 import { SCORE_MAX, calcScore, type ScoreInput } from '@/lib/score'
 
-const DEFAULT_INPUT: ScoreInput = { noHouseYears: 0, dependents: 0, accountMonths: 0 }
+type ScoreForm = Record<keyof ScoreInput, string>
+
+const EMPTY_FORM: ScoreForm = { noHouseYears: '', dependents: '', accountMonths: '' }
+
+// 빈 칸·음수·비숫자는 0으로 본다 — HTML5 `min`은 타이핑된 값을 막지 못한다.
+function toNumber(raw: string): number {
+  const n = Number(raw)
+  return Number.isFinite(n) ? Math.max(0, n) : 0
+}
+
+function toInput(form: ScoreForm): ScoreInput {
+  return {
+    noHouseYears: toNumber(form.noHouseYears),
+    dependents: toNumber(form.dependents),
+    accountMonths: toNumber(form.accountMonths),
+  }
+}
 
 /** 입력 한 줄(Figma `Input Row` 8:192) — 라벨 + 산정 기준 힌트 + 값·점수. */
 function InputRow({
@@ -19,8 +35,8 @@ function InputRow({
   hint: string
   unit: string
   score: number
-  value: number
-  onChange: (value: number) => void
+  value: string
+  onChange: (value: string) => void
 }) {
   return (
     <label className="block">
@@ -29,13 +45,16 @@ function InputRow({
         <span className="text-[13px] font-medium text-ink-muted">{hint}</span>
       </span>
       <span className="mt-2 flex items-center justify-between gap-3 rounded-field border border-border bg-field px-4 py-3">
+        {/* 값을 문자열로 들고 있다 — 숫자 state를 그대로 value로 쓰면 빈 칸이 0으로 되돌아가
+            "0을 지우고 입력"이 안 된다. 숫자로 바꾸는 것은 점수 계산 직전에만 한다. */}
         <input
           type="number"
           min={0}
+          inputMode="numeric"
+          placeholder="0"
           value={value}
-          // HTML5 `min`은 타이핑된 값을 막지 못한다 — 여기서 걸러야 음수 입력이 점수로 안 간다.
-          onChange={(e) => onChange(Math.max(0, Number(e.target.value)))}
-          className="w-full min-w-0 bg-transparent text-[15px] font-semibold tabular-nums text-ink focus:outline-none"
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full min-w-0 bg-transparent text-[15px] font-semibold tabular-nums text-ink placeholder:text-ink-muted focus:outline-none"
         />
         <span className="shrink-0 text-sm font-medium tabular-nums text-ink-sub">
           {unit} ({score}점)
@@ -47,21 +66,31 @@ function InputRow({
 
 export default function ScorePage() {
   const { input, save, loaded } = useScore()
-  const [form, setForm] = useState<ScoreInput>(DEFAULT_INPUT)
+  const [form, setForm] = useState<ScoreForm>(EMPTY_FORM)
 
   // useFavorites()와 같은 이유로 저장된 값은 마운트 후에만 읽는다(하이드레이션 불일치 방지) —
   // loaded가 true가 되는 시점에 한 번만 폼을 채운다.
+  // 저장된 값은 **최초 1회만** 폼에 채운다. 매번 동기화하면 한 칸을 고칠 때마다 save가
+  // input을 바꿔 effect가 다시 돌고, 방금 비운 칸이 "0"으로 되살아난다(사용자 신고).
+  const hydrated = useRef(false)
   useEffect(() => {
-    if (loaded && input) setForm(input)
+    if (hydrated.current || !loaded) return
+    hydrated.current = true
+    if (!input) return
+    setForm({
+      noHouseYears: String(input.noHouseYears),
+      dependents: String(input.dependents),
+      accountMonths: String(input.accountMonths),
+    })
   }, [loaded, input])
 
-  function update(next: Partial<ScoreInput>) {
+  function update(next: Partial<ScoreForm>) {
     const merged = { ...form, ...next }
     setForm(merged)
-    save(merged)
+    save(toInput(merged))
   }
 
-  const result = calcScore(form)
+  const result = calcScore(toInput(form))
   const percent = Math.round((result.total / SCORE_MAX.total) * 100)
 
   const breakdown: { label: string; score: number; max: number }[] = [
@@ -124,12 +153,11 @@ export default function ScorePage() {
           >
             <div className="h-full bg-brand transition-all" style={{ width: `${percent}%` }} />
           </div>
-          <div className="mt-2 flex justify-between text-xs tabular-nums text-brand">
-            <span className="font-medium">0점</span>
-            <span className="font-bold">
-              {result.total} / {SCORE_MAX.total}점
-            </span>
-            <span className="font-medium">{SCORE_MAX.total}점</span>
+          {/* 눈금 양 끝만 둔다 — 가운데에 "8 / 84점"을 또 쓰면 위의 "총점 8점"과 오른쪽
+              "84점"을 합쳐 같은 숫자가 두 번씩 보인다. */}
+          <div className="mt-2 flex justify-between text-xs font-medium tabular-nums text-brand">
+            <span>0점</span>
+            <span>{SCORE_MAX.total}점</span>
           </div>
         </div>
 
