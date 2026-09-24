@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { competitionOperationFor, groupCompetitionRows, toSpecialSupplyByType } from '@/lib/applyhome/competition'
+import { competitionOperationFor, groupCompetitionRows, groupWinnerScores, toSpecialSupplyByType } from '@/lib/applyhome/competition'
 import { joinCompetition, pickPrimaryCompetition } from '@/lib/applyhome/competitionJoin'
 import { ADAPTERS } from '@/lib/applyhome/adapters'
 import { COMPETITION_OPERATIONS } from '@/lib/config'
@@ -231,5 +231,35 @@ describe('dev 픽스처 쌍 — remndr-mdl-extra ↔ remndr-cmpet 폴백 조인'
 
     expect(result[0].competition).toBeDefined()
     expect(result[0].competition?.rateRaw).toBe(remndrCmpetDev.data[0].CMPET_RATE)
+  })
+})
+
+// 프로덕션 실측(2026-09-24, 공고 2026000419) — 같은 MODEL_NO에 대해 거주지역별로 2행이 온다.
+// 기타지역은 배정이 없으면 0/0/0으로 오는데, Map에 덮어쓰면 그게 해당지역의 실제 가점
+// (최저 42 · 최고 79)을 지운다. 배포된 API가 실제로 {lowest:0,highest:0}을 내고 있었다.
+describe('groupWinnerScores', () => {
+  const rowsOf2026000419 = [
+    { MODEL_NO: '01', RESIDE_SECD: '01', RESIDE_SENM: '해당지역', LWET_SCORE: '42', TOP_SCORE: '79', AVRG_SCORE: '51.79' },
+    { MODEL_NO: '01', RESIDE_SECD: '02', RESIDE_SENM: '기타지역', LWET_SCORE: '0', TOP_SCORE: '0', AVRG_SCORE: '0' },
+  ]
+
+  it('해당지역 행을 대표값으로 고른다 — 뒤에 오는 기타지역 0점이 덮어쓰지 않는다', () => {
+    const scores = groupWinnerScores(rowsOf2026000419)
+    expect(scores.get('model:01')).toEqual({ lowest: 42, highest: 79, average: 51.79 })
+  })
+
+  it('해당지역이 뒤에 와도 이긴다 — 행 순서에 의존하지 않는다', () => {
+    const scores = groupWinnerScores([...rowsOf2026000419].reverse())
+    expect(scores.get('model:01')?.lowest).toBe(42)
+  })
+
+  it('거주지역 구분이 없는 행도 그대로 들어온다', () => {
+    const scores = groupWinnerScores([{ MODEL_NO: '07', LWET_SCORE: '55', TOP_SCORE: '70', AVRG_SCORE: '60' }])
+    expect(scores.get('model:07')?.lowest).toBe(55)
+  })
+
+  it('값이 "-"면 null이다 — 0으로 떨어뜨리지 않는다(§4.3②)', () => {
+    const scores = groupWinnerScores([{ MODEL_NO: '02', RESIDE_SECD: '01', LWET_SCORE: '-', TOP_SCORE: '-', AVRG_SCORE: '-' }])
+    expect(scores.get('model:02')).toEqual({ lowest: null, highest: null, average: null })
   })
 })

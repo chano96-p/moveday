@@ -115,6 +115,35 @@ function toCancResplRows(raw: Record<string, unknown>): CompetitionRow[] {
 }
 
 /**
+ * 당첨가점 행을 모델 단위로 묶는다. 순수 함수라 단위 테스트 대상이다.
+ *
+ * 같은 `MODEL_NO`에 대해 **거주지역별로 여러 행이 온다**(Phase 8 실측: 해당지역/기타지역 2행).
+ * Map에 그냥 덮어쓰면 마지막 행이 이기는데, 기타지역은 배정이 없으면 `0/0/0`으로 오므로
+ * 해당지역의 실제 가점(실측 예: 최저 42 · 최고 79)을 0으로 지워버린다. 가점제에서 0점은
+ * 나올 수 없는 값이라 화면에서 "없음"이 아니라 **틀린 값**으로 읽힌다 — §10이 "내 가점 62점 vs
+ * 이 주택형 최저 당첨 64점"으로 나란히 보여주는 자리라 특히 나쁘다(§9).
+ *
+ * 경쟁률의 `pickPrimaryCompetition`과 같은 규칙으로 해당지역을 대표값으로 고른다.
+ */
+export function groupWinnerScores(scoreRows: Record<string, unknown>[]): Map<string, WinnerScore> {
+  const scoreByKey = new Map<string, WinnerScore>()
+  for (const raw of scoreRows) {
+    const { key } = joinKeyOf(raw, true) // B-7(당첨가점)은 항상 MODEL_NO를 갖는다
+    const isCorresponding =
+      typeof raw.RESIDE_SECD === 'string' && RESIDE_SECD_TO_KIND[raw.RESIDE_SECD] === 'corresponding'
+    // 해당지역이면 무조건 이긴다. 아니면 아직 비어 있을 때만 채운다 — 거주지역 구분이 없는
+    // 응답도 그대로 들어와야 한다.
+    if (!isCorresponding && scoreByKey.has(key)) continue
+    scoreByKey.set(key, {
+      lowest: parseAmount(raw.LWET_SCORE),
+      highest: parseAmount(raw.TOP_SCORE),
+      average: parseAmount(raw.AVRG_SCORE),
+    })
+  }
+  return scoreByKey
+}
+
+/**
  * raw 경쟁률 행을 모델(또는 주택형 키) 단위로 묶는다. 순수 함수라 단위 테스트 대상이다(팀 리드 승인).
  * `MODEL_NO`가 있는 오퍼레이션은 그걸로, 없으면(`getRemndrLttotPblancCmpet`/`getOPTLttotPblancCmpet`)
  * `houseTypeKey`로 폴백한다(§4.4). 조인 실패는 에러가 아니라 그 모델의 경쟁률 열이 비는 것으로 끝난다.
@@ -220,15 +249,7 @@ export async function fetchCompetitionResult(notice: Notice, revalidate: number)
   const preferModelNo = OPERATIONS_WITH_MODEL_NO.has(operation)
   const grouped = groupCompetitionRows(competitionRows, operation)
 
-  const scoreByKey = new Map<string, WinnerScore>()
-  for (const raw of scoreRows) {
-    const { key } = joinKeyOf(raw, true) // B-7(당첨가점)은 항상 MODEL_NO를 갖는다
-    scoreByKey.set(key, {
-      lowest: parseAmount(raw.LWET_SCORE),
-      highest: parseAmount(raw.TOP_SCORE),
-      average: parseAmount(raw.AVRG_SCORE),
-    })
-  }
+  const scoreByKey = groupWinnerScores(scoreRows)
 
   const rows: CompetitionSupplyRow[] = grouped.map((group) => {
     const key = group.modelNo !== null && preferModelNo ? `model:${group.modelNo}` : `type:${toHouseTypeKey(group.houseType)}`
