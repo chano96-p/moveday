@@ -59,6 +59,30 @@ export class RebstatUpstreamError extends AppError {
   }
 }
 
+export class AnalysisKeyMissingError extends AppError {
+  readonly code = 'ANALYSIS_KEY_MISSING'
+  readonly status = 503
+  constructor() {
+    super('GEMINI_API_KEY가 설정되지 않았습니다.')
+  }
+}
+
+export class AnalysisUpstreamError extends AppError {
+  readonly code = 'ANALYSIS_UPSTREAM_ERROR'
+  readonly status = 502
+  constructor() {
+    super('Gemini가 사용할 수 없는 응답을 반환했습니다.')
+  }
+}
+
+export class AnalysisRateLimitedError extends AppError {
+  readonly code = 'ANALYSIS_RATE_LIMITED'
+  readonly status = 429
+  constructor() {
+    super('Gemini 무료 티어 호출 한도에 걸렸습니다.')
+  }
+}
+
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError
 }

@@ -97,7 +97,7 @@ export default function NoticeDetailPage() {
           <SpecialSupplyBox specialSupply={competitionQuery.data?.specialSupply} />
           <KakaoMap address={notice.address} />
           <RegionMarket region={notice.region} />
-          <AISection />
+          <AISection id={notice.id} type={typeParam} />
         </div>
 
         <aside className="w-full space-y-6 xl:w-[400px] xl:shrink-0">

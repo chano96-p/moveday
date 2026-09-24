@@ -47,6 +47,7 @@ export const CACHE_TTL = {
   noticeDetail: 1800,   // 30분
   competition: 1800,    // 30분
   marketStats: 86400,   // 24시간
+  analysis: 86400,      // 24시간 — 무료 티어의 일일 호출 한도를 공고 단위로 아낀다(§13)
 } as const
 
 export const REBSTAT_TABLES = {
@@ -84,3 +85,16 @@ export const REBSTAT_REGION_CLS_ID: Record<RebstatTableId, Record<'전국' | Reg
     충남: 500018, 전북: 500019, 전남: 500020, 경북: 500021, 경남: 500022, 제주: 500023,
   },
 }
+
+/**
+ * Gemini Interactions API(§13). `generateContent`가 아니라 `/v1beta/interactions`다 —
+ * 요청 본문이 `model`/`input`/`response_format`이고 결과는 `steps[]`로 온다.
+ */
+export const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/interactions'
+
+/**
+ * 분석문은 한국어 서술 + 고정 스키마 JSON이다. 이 둘을 동시에 요구하면 경량 모델이
+ * 한국어가 어색해지거나 스키마를 어긴다 — flash-lite가 아니라 flash를 기본으로 둔다.
+ * 무료 티어 한도에 걸리면 `gemini-3.5-flash-lite`로 내리는 것이 첫 번째 조치다.
+ */
+export const GEMINI_MODEL = 'gemini-3.8-flash'
