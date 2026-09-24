@@ -60,6 +60,19 @@ export function parseCount(value: unknown): number | null {
  * (`59A-1`, `84A1`, `84B-1` 등)에서 매칭에 실패해 서로 다른 주택형 6종을 전부 `"84"`로
  * 뭉개는 조인 충돌을 만들었다. 원문 비교가 더 정확하고 더 단순하므로 트리밍만 한다.
  */
+/**
+ * `MVN_PREARNGE_YM`(입주예정월)은 전 유형 공통으로 `YYYYMM`이다(§4.3① — 날짜 필드와 달리
+ * 유형별로 갈리지 않는다). `yyyy-MM`으로 정규화한다. 형식이 다르면 null이다.
+ */
+export function parseYearMonth(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const match = /^(\d{4})(\d{2})$/.exec(value.trim())
+  if (!match) return null
+  const month = Number(match[2])
+  if (month < 1 || month > 12) return null
+  return `${match[1]}-${match[2]}`
+}
+
 export function toHouseTypeKey(raw: string): string {
   return raw.trim()
 }

@@ -113,19 +113,35 @@ export function ScheduleTimeline({ notice }: { notice: NoticeDetailResponse['not
 
   if (steps.length === 0) return null
 
+  // 지난 단계 다음에 오는 첫 단계가 "현재"다 — 디자인의 강조된 노드(Figma 4:152).
+  const currentIndex = steps.findIndex((step) => !step.isPast)
+
   return (
-    <section aria-label="공고 일정">
-      <h2 className="mb-3 text-sm font-medium text-ink-muted">일정</h2>
-      <ol className="space-y-3">
-        {steps.map((step) => (
-          <li key={step.key} className={step.isPast ? 'opacity-40' : ''}>
-            <div className="flex items-baseline gap-3">
-              <span className="w-16 shrink-0 text-sm font-medium text-ink">{step.label}</span>
-              <span className="tabular-nums text-sm text-ink">{step.dateText}</span>
-            </div>
-            {step.breakdown && <p className="ml-16 text-xs tabular-nums text-ink-muted">{step.breakdown}</p>}
-          </li>
-        ))}
+    <section aria-label="청약 일정" className="rounded-card border border-border bg-surface p-6">
+      <h2 className="text-lg font-bold text-ink">청약 일정</h2>
+      <ol className="mt-5 space-y-5">
+        {steps.map((step, index) => {
+          const current = index === currentIndex
+          return (
+            <li key={step.key} className={`flex gap-4 ${step.isPast ? 'opacity-40' : ''}`}>
+              <span className="mt-1.5 flex size-4 shrink-0 items-center justify-center" aria-hidden>
+                <span
+                  className={`rounded-full ${current ? 'size-3 bg-brand' : 'size-2.5 bg-ink-muted'}`}
+                />
+              </span>
+              <div className="min-w-0">
+                <p className={`text-[13px] font-medium ${current ? 'text-brand' : 'text-ink-muted'}`}>
+                  {step.label}
+                  {current && ' (현재)'}
+                </p>
+                <p className="text-[15px] font-semibold tabular-nums text-ink">{step.dateText}</p>
+                {step.breakdown && (
+                  <p className="mt-0.5 text-xs tabular-nums text-ink-muted">{step.breakdown}</p>
+                )}
+              </div>
+            </li>
+          )
+        })}
       </ol>
     </section>
   )

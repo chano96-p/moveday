@@ -6,10 +6,11 @@ export function SpecialSupplyBox({ specialSupply }: { specialSupply: SpecialSupp
 
   return (
     <section aria-label="특별공급 접수현황">
-      <h2 className="mb-3 text-sm font-medium text-ink-muted">특별공급 접수현황</h2>
-      <table className="w-full border-collapse text-sm">
+      <h2 className="mb-5 text-xl font-bold text-ink">특별공급 접수현황</h2>
+      <div className="overflow-x-auto rounded-card border border-border bg-surface">
+        <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-border text-left text-ink-muted">
+          <tr className="border-b border-border bg-canvas text-left text-ink-muted">
             <th className="py-2 pr-3">유형</th>
             <th className="py-2 pr-3 text-right">배정세대수</th>
             <th className="py-2">접수현황</th>
@@ -31,7 +32,8 @@ export function SpecialSupplyBox({ specialSupply }: { specialSupply: SpecialSupp
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </section>
   )
 }

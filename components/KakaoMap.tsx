@@ -94,7 +94,7 @@ export function KakaoMap({ address }: { address: string | null }) {
       />
       {coords && (
         <section aria-label="공급위치 지도">
-          <h2 className="mb-3 text-sm font-medium text-ink-muted">공급위치</h2>
+          <h2 className="mb-5 text-xl font-bold text-ink">공급위치</h2>
           <div ref={containerRef} className="h-64 w-full rounded-lg border border-border" />
         </section>
       )}

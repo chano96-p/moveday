@@ -33,6 +33,12 @@ export interface Notice {
   maxPrice: number | null       // 만원
   totalUnits: number | null
   noticeUrl: string | null
+  // 상세 "단지 주요 정보"용(§9). 시공사(CNSTRCT_ENTRPS_NM)는 APT Detail에만 있어서
+  // 나머지 유형은 항상 null이다 — 그때는 사업주체를 대신 보여준다.
+  developer: string | null    // BSNS_MBY_NM 사업주체
+  builder: string | null      // CNSTRCT_ENTRPS_NM 시공사 — APT 전용
+  contact: string | null      // MDHS_TELNO 문의처
+  moveInMonth: string | null  // MVN_PREARNGE_YM 입주예정월, `yyyy-MM`
 }
 
 // 목록 응답 전용 타입. 분양가는 Detail에 없고 Mdl에만 있어 목록에서는 항상 null이라(§4.1),

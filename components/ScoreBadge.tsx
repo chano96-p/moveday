@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useScore } from '@/hooks/useScore'
 import type { SupplyRow } from '@/lib/types'
 
@@ -15,20 +14,16 @@ function lowestWinnerScore(supply: SupplyRow[]): number | null {
 export function ScoreBadge({ supply }: { supply: SupplyRow[] }) {
   const { result } = useScore()
 
-  if (!result) {
-    return (
-      <Link href="/score" className="text-xs text-ink-muted hover:text-ink hover:underline">
-        가점 계산하기 →
-      </Link>
-    )
-  }
+  // 내 가점이 저장돼 있지 않으면 아무것도 렌더하지 않는다 — 상세 상단에 링크 한 줄만 떠
+  // 있으면 섹션 제목처럼 읽힌다. 계산기 유도는 대시보드 배너가 맡는다.
+  if (!result) return null
 
   const winnerLowest = lowestWinnerScore(supply)
 
   return (
-    <span className="inline-block rounded border border-border bg-canvas px-2 py-0.5 text-xs tabular-nums text-ink-muted">
+    <span className="inline-flex items-center gap-2 rounded-field bg-brand-tint px-4 py-2 text-sm font-bold tabular-nums text-brand">
       내 가점 {result.total}점
-      {winnerLowest !== null && <> · 이 공고 최저 당첨 {winnerLowest}점</>}
+      {winnerLowest !== null && <span className="font-medium text-ink-sub">· 이 공고 최저 당첨 {winnerLowest}점</span>}
     </span>
   )
 }

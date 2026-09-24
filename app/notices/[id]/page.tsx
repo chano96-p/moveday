@@ -4,7 +4,10 @@ import { useMemo } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { useNoticeDetail } from '@/hooks/useNoticeDetail'
 import { useCompetition } from '@/hooks/useCompetition'
-import { NoticeHeader } from '@/components/NoticeHeader'
+import { NoticeHero } from '@/components/NoticeHero'
+import { InfoGrid } from '@/components/InfoGrid'
+import { ApplyCta } from '@/components/ApplyCta'
+import { ScoreBadge } from '@/components/ScoreBadge'
 import { ScheduleTimeline } from '@/components/ScheduleTimeline'
 import { SupplyTable } from '@/components/SupplyTable'
 import { SpecialSupplyBox } from '@/components/SpecialSupplyBox'
@@ -38,8 +41,8 @@ export default function NoticeDetailPage() {
 
   if (!hasValidType) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <p className="rounded-lg border border-border bg-surface p-6 text-center text-ink-muted">
+      <main className="mx-auto max-w-[1440px] px-6 py-10 xl:px-20">
+        <p className="rounded-card border border-border bg-surface p-12 text-center text-ink-muted">
           잘못된 주소입니다. 대시보드에서 다시 들어와 주세요.
         </p>
       </main>
@@ -47,7 +50,7 @@ export default function NoticeDetailPage() {
   }
 
   if (query.isLoading) {
-    return <main className="mx-auto max-w-5xl px-4 py-10 text-ink-muted">불러오는 중…</main>
+    return <main className="mx-auto max-w-[1440px] px-6 py-10 text-ink-muted xl:px-20">불러오는 중…</main>
   }
 
   if (query.isError) {
@@ -59,16 +62,16 @@ export default function NoticeDetailPage() {
           ? '청약홈 인증키가 설정되지 않았습니다. .env에 ODCLOUD_SERVICE_KEY를 설정하세요.'
           : '공고 정보를 불러올 수 없습니다.'
     return (
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <p className="rounded-lg border border-border bg-surface p-6 text-center text-ink-muted">{message}</p>
+      <main className="mx-auto max-w-[1440px] px-6 py-10 xl:px-20">
+        <p className="rounded-card border border-border bg-surface p-12 text-center text-ink-muted">{message}</p>
       </main>
     )
   }
 
   if (!query.data) {
     return (
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <p className="rounded-lg border border-border bg-surface p-6 text-center text-ink-muted">
+      <main className="mx-auto max-w-[1440px] px-6 py-10 xl:px-20">
+        <p className="rounded-card border border-border bg-surface p-12 text-center text-ink-muted">
           공고 정보를 불러올 수 없습니다.
         </p>
       </main>
@@ -78,25 +81,30 @@ export default function NoticeDetailPage() {
   const { notice, regulation, noticeUrl } = query.data
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-4 py-8">
-      <NoticeHeader notice={notice} supply={supply} />
-      <ScheduleTimeline notice={notice} />
-      <SupplyTable supply={supply} />
-      <SpecialSupplyBox specialSupply={competitionQuery.data?.specialSupply} />
-      <RegulationBox regulation={regulation} />
-      <RegionMarket region={notice.region} />
-      {noticeUrl && (
-        <a
-          href={noticeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-sm text-ink-muted hover:text-ink hover:underline"
-        >
-          공고문 원문 보기 →
-        </a>
-      )}
-      <KakaoMap address={notice.address} />
-      <AISection />
+    <main className="mx-auto max-w-[1440px] space-y-8 px-6 py-10 xl:px-20">
+      <NoticeHero notice={notice} />
+
+      <div className="flex flex-col gap-8 xl:flex-row">
+        <div className="min-w-0 flex-1 space-y-10">
+          <InfoGrid notice={notice} supply={supply} />
+          <ScoreBadge supply={supply} />
+          <RegulationBox regulation={regulation} noticeUrl={noticeUrl} />
+
+          {/* 아래는 디자인에 없지만 유지하는 섹션들이다 — 경쟁률·당첨가점·특별공급·지도·지역
+              시세는 Phase 4~7에서 만든 기능이고, 디자이너가 화면에 안 그렸다는 것이 삭제
+              근거는 아니다(팀 리드 판단). 디자인 섹션 아래에 이어붙인다. */}
+          <SupplyTable supply={supply} />
+          <SpecialSupplyBox specialSupply={competitionQuery.data?.specialSupply} />
+          <KakaoMap address={notice.address} />
+          <RegionMarket region={notice.region} />
+          <AISection />
+        </div>
+
+        <aside className="w-full space-y-6 xl:w-[400px] xl:shrink-0">
+          <ScheduleTimeline notice={notice} />
+          <ApplyCta noticeUrl={noticeUrl} />
+        </aside>
+      </div>
     </main>
   )
 }

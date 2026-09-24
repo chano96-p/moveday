@@ -30,10 +30,11 @@ export function SupplyTable({ supply }: { supply: SupplyRow[] }) {
 
   return (
     <section aria-label="주택형별 공급 정보">
-      <h2 className="mb-3 text-sm font-medium text-ink-muted">주택형</h2>
-      <table className="w-full border-collapse text-sm">
+      <h2 className="mb-5 text-xl font-bold text-ink">주택형</h2>
+      <div className="overflow-x-auto rounded-card border border-border bg-surface">
+        <table className="w-full border-collapse text-sm">
         <thead>
-          <tr className="border-b border-border text-left text-ink-muted">
+          <tr className="border-b border-border bg-canvas text-left text-ink-muted">
             <th className="py-2 pr-3">주택형</th>
             <th className="py-2 pr-3 text-right">{areaHeader}</th>
             <th className="py-2 pr-3 text-right">공급세대</th>
@@ -76,7 +77,8 @@ export function SupplyTable({ supply }: { supply: SupplyRow[] }) {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </section>
   )
 }

@@ -7,6 +7,7 @@ import {
   parseAmount,
   parseCount,
   parseIsoDate,
+  parseYearMonth,
   toHouseTypeKey,
 } from '@/lib/applyhome/parse'
 
@@ -25,6 +26,10 @@ interface RentDetailRaw {
   CNTRCT_CNCLS_BGNDE?: string | null
   CNTRCT_CNCLS_ENDDE?: string | null
   PBLANC_URL?: string | null
+  BSNS_MBY_NM?: string | null
+  CNSTRCT_ENTRPS_NM?: string | null
+  MDHS_TELNO?: string | null
+  MVN_PREARNGE_YM?: string | null
 }
 
 interface RentMdlRaw {
@@ -71,6 +76,10 @@ function toNotice(rawInput: unknown): Notice {
     maxPrice: null,
     totalUnits: parseCount(raw.TOT_SUPLY_HSHLDCO),
     noticeUrl: raw.PBLANC_URL ?? null,
+    developer: raw.BSNS_MBY_NM ?? null,
+    builder: raw.CNSTRCT_ENTRPS_NM ?? null,
+    contact: raw.MDHS_TELNO ?? null,
+    moveInMonth: parseYearMonth(raw.MVN_PREARNGE_YM),
   }
 }
 

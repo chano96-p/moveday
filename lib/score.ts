@@ -83,6 +83,9 @@ function scoreFromTiers(value: number, tiers: ScoreTier[]): number {
   return matched
 }
 
+/** 항목별 만점(§10) — 화면이 "20 / 32점 만점"을 그리는 데 쓴다. 합이 84다. */
+export const SCORE_MAX = { noHouse: 32, dependents: 35, account: 17, total: 84 } as const
+
 export function calcScore(input: ScoreInput): ScoreResult {
   const breakdown: ScoreBreakdown = {
     noHouse: scoreFromTiers(input.noHouseYears, NO_HOUSE_TIERS),

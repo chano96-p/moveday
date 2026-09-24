@@ -21,7 +21,21 @@ export function formatPriceRange(min: number | null, max: number | null): string
 
 export function formatArea(value: number | null): string {
   if (value === null) return '-'
-  return `${value}㎡`
+  // 상류가 소수 넷째 자리까지 준다(`112.4279`) — 표·카드에서 자릿수가 들쭉날쭉해 읽기 어렵다.
+  // 표시만 소수 1자리로 줄인다(정수면 소수점을 떼고). 비교·정렬은 원값으로 한다.
+  const rounded = Math.round(value * 10) / 10
+  return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}㎡`
+}
+
+/** `MDHS_TELNO`는 하이픈 없는 숫자로 온다(`15990199`) — 대표번호/지역번호 자리로 끊는다. */
+export function formatPhone(value: string | null): string | null {
+  if (value === null) return null
+  const digits = value.replace(/[^0-9]/g, '')
+  if (digits.length === 8) return `${digits.slice(0, 4)}-${digits.slice(4)}`
+  if (digits.length === 9) return `${digits.slice(0, 2)}-${digits.slice(2, 5)}-${digits.slice(5)}`
+  if (digits.length === 10) return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`
+  if (digits.length === 11) return `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`
+  return value
 }
 
 export function formatDday(dday: number | null): string {
