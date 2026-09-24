@@ -4,11 +4,11 @@ import { clampToRange, extractRebstatRows, type RebstatRow } from './parse'
 
 const FIXTURE_DIR = path.join(process.cwd(), 'test/fixtures/rebstat')
 
-// STATBL_ID → 픽스처 파일. 공동주택 실거래가격지수는 코드가 미확정이라(§4.5③) 없다 —
-// /api/market/real-transaction은 픽스처 모드에서도 REBSTAT_TABLE_UNKNOWN으로 끝난다(정상).
+// STATBL_ID → 픽스처 파일. Phase 8에서 실거래가격지수 코드를 확보해 세 표가 다 있다.
 const STATBL_FIXTURE_FILE: Record<string, string> = {
   A_2024_00045: 'sale-index.json',
   A_2024_00050: 'jeonse-index.json',
+  A_2024_00178: 'real-transaction-index.json',
 }
 
 interface FixtureRowsOptions {
@@ -28,8 +28,11 @@ interface FixtureRow extends RebstatRow {
 
 /**
  * 픽스처 모드에서 오퍼레이션(=STATBL_ID) + 조건에 대응하는 행을 반환한다.
- * `test/fixtures/rebstat/`는 전국(`CLS_ID=500001`) 데이터만 갖고 있다 — 그 외 지역은
- * 라우트가 `REBSTAT_REGION_UNMAPPED`로 먼저 끝나 이 함수까지 도달하지 않는다.
+ * 픽스처는 전국과 공고 픽스처가 쓰는 4개 지역(서울·경기·인천·부산)만 갖고 있다 —
+ * 그 외 지역은 매핑은 되지만 픽스처에 행이 없어 빈 배열이 되고, 차트가 스스로 숨는다.
+ *
+ * `CLS_ID`는 통계표마다 다르다(§4.5④) — 같은 `500008`이 매매·전세 표에서는 서울이고
+ * 실거래 표에서는 부산이다. 파일이 표별로 갈려 있으므로 이 필터가 옳게 동작한다.
  */
 export function fetchFixtureRebstatRows(options: FixtureRowsOptions): RebstatRow[] {
   const filename = STATBL_FIXTURE_FILE[options.statblId]
