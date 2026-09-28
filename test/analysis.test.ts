@@ -145,6 +145,19 @@ describe('buildAnalysisInput', () => {
   it('주택형에 사람이 읽을 표기를 붙인다', () => {
     expect(input).toContain('공급 85㎡')
   })
+
+  // OPT Mdl에는 면적 필드가 없다. formatArea(null)의 '-'를 그대로 쓰면 `공급 -`이 문장에 나간다.
+  it('면적이 없으면 주택형 원문으로 떨어진다', () => {
+    const noArea = buildAnalysisInput({
+      notice: NOTICE,
+      supply: [{ ...SUPPLY[0], area: { value: null, kind: 'supply' } }],
+      regulation: { available: false, flags: [] },
+      competition: null,
+      market: [],
+    })
+    expect(noArea).toContain('"표기": "84.9500A"')
+    expect(noArea).not.toContain('공급 -')
+  })
 })
 
 describe('buildAnalysisInput — 변동률 방향', () => {

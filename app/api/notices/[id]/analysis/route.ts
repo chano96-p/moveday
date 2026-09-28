@@ -2,14 +2,13 @@ import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 import { CACHE_TTL, GEMINI_MODEL, NOTICE_TYPES } from '@/lib/config'
 import { assertOdcloudKey } from '@/lib/applyhome/client'
-import { fetchNoticeDetail } from '@/lib/applyhome/detail'
+import { fetchNoticeDetail, type NoticeDetail } from '@/lib/applyhome/detail'
 import { fetchCompetitionResult } from '@/lib/applyhome/competition'
 import { fetchSalePriceSeriesOrNull } from '@/lib/rebstat/market'
 import { assertGeminiKey, generateJson } from '@/lib/gemini/client'
 import { AnalysisSchema, analysisJsonSchema } from '@/lib/analysis/schema'
 import { ANALYSIS_SYSTEM_INSTRUCTION, buildAnalysisInput } from '@/lib/analysis/prompt'
 import { AnalysisUpstreamError, toErrorResponse } from '@/lib/errors'
-import type { NoticeType } from '@/lib/types'
 
 const QuerySchema = z.object({
   type: z.enum(NOTICE_TYPES),
@@ -18,14 +17,12 @@ const QuerySchema = z.object({
 const MARKET_MONTHS = 24
 const MAX_OUTPUT_TOKENS = 1024
 
-// unstable_cache는 반환값을 직렬화해 저장한다 — Symbol 센티널은 캐시를 통과하지 못하고
-// undefined로 돌아온다. "없음"은 null로 표현한다.
-async function analyze(id: string, type: NoticeType) {
-  const detail = await fetchNoticeDetail(id, type, CACHE_TTL.analysis)
-  if (detail === null) return null
-
+async function analyze(detail: NoticeDetail) {
   const [competition, market] = await Promise.all([
-    fetchCompetitionResult(detail.notice, CACHE_TTL.analysis),
+    // 상세 화면과 **같은 TTL**을 쓴다. 여기만 24시간으로 두면 Data Cache 엔트리가 갈려
+    // 화면은 30분 전 데이터를, 분석은 방금 받은 데이터를 보게 된다 — 실제로 상류가
+    // 잠깐 0건을 낸 사이 상세는 200인데 분석만 404가 나는 상태를 만들었다.
+    fetchCompetitionResult(detail.notice, CACHE_TTL.noticeDetail),
     fetchSalePriceSeriesOrNull(detail.notice.region ?? '전국', MARKET_MONTHS),
   ])
 
@@ -73,17 +70,20 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     assertGeminiKey()
     assertOdcloudKey()
 
+    // 공고 조회는 캐시 **밖**에서 한다. 안에 두면 상류가 잠깐 0건을 낸 순간의 "공고 없음"이
+    // 24시간 동안 박혀, 상류가 돌아와도 하루 종일 404가 난다(실측으로 겪었다).
+    const detail = await fetchNoticeDetail(id, type, CACHE_TTL.noticeDetail)
+    if (detail === null) {
+      return Response.json({ error: 'NOTICE_NOT_FOUND' }, { status: 404 })
+    }
+
     // 한 공고의 분석은 하루 한 번만 생성한다. 무료 티어의 한도는 방문자 수가 아니라
     // **공고 수**만큼만 쓰이게 된다 — 같은 공고를 백 명이 눌러도 호출은 한 번이다.
     const result = await unstable_cache(
-      () => analyze(id, type),
+      () => analyze(detail),
       ['notice-analysis', id, type],
       { revalidate: CACHE_TTL.analysis },
     )()
-
-    if (result === null) {
-      return Response.json({ error: 'NOTICE_NOT_FOUND' }, { status: 404 })
-    }
 
     return Response.json(result)
   } catch (error) {

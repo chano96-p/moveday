@@ -51,6 +51,16 @@ function describeChange(value: number | null): string | null {
   return `${Math.abs(value).toFixed(2)}% ${value > 0 ? '상승' : '하락'}`
 }
 
+/**
+ * 문장에 쓸 주택형 이름. 면적이 있으면 `공급 85㎡`, **없으면 주택형 원문**으로 떨어진다 —
+ * 임의공급(OPT) Mdl에는 면적 필드가 아예 없어서(§4.3) `formatArea(null)`의 `-`를 그대로
+ * 쓰면 `공급 -`이라는 표기가 문장에 나간다(실측).
+ */
+function displayLabel(row: SupplyRow): string {
+  if (row.area.value === null) return row.houseType
+  return `${row.area.kind === 'supply' ? '공급' : '전용'} ${formatArea(row.area.value)}`
+}
+
 function latestPoint(series: MarketSeries): { month: string; value: number } | null {
   const point = series.points.at(-1)
   return point ? { month: point.month, value: Math.round(point.value * 10) / 10 } : null
@@ -75,7 +85,7 @@ export function buildAnalysisInput(payload: AnalysisPayload): string {
     // 모델이 "36,707만 원"으로 옮겨 적는다. 사람이 읽을 형태를 **같이** 넘겨 그걸 쓰게 한다.
     주택형: supply.map((row) => ({
       주택형: row.houseType,
-      표기: `${row.area.kind === 'supply' ? '공급' : '전용'} ${formatArea(row.area.value)}`,
+      표기: displayLabel(row),
       일반공급세대: row.generalUnits,
       특별공급세대: row.specialUnits,
       분양가: formatManwon(row.price),
