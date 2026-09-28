@@ -1,5 +1,10 @@
 import { GEMINI_BASE, GEMINI_MODEL } from '@/lib/config'
-import { AnalysisKeyMissingError, AnalysisRateLimitedError, AnalysisUpstreamError } from '@/lib/errors'
+import {
+  AnalysisKeyMissingError,
+  AnalysisRateLimitedError,
+  AnalysisUnavailableError,
+  AnalysisUpstreamError,
+} from '@/lib/errors'
 
 export function assertGeminiKey(): void {
   if (!process.env.GEMINI_API_KEY) throw new AnalysisKeyMissingError()
@@ -69,9 +74,13 @@ export async function generateJson(args: {
     }),
   })
 
-  // 무료 티어에서 실제로 마주치는 실패는 키 오류가 아니라 분당·일일 한도다.
-  // 화면에서 "잠시 후 다시"와 "설정이 잘못됨"을 구분해야 해서 코드를 나눈다.
+  // 무료 티어에서 실제로 마주치는 실패는 키 오류가 아니라 이 둘이다(실측).
+  //   429 — 분당 호출 한도(gemini-3.8-flash 기준 5회)
+  //   503 — 모델 과부하 "currently experiencing high demand"
+  // 둘 다 "잠시 후 다시"인데 원인이 달라 문구가 갈린다. 상류 오류와 뭉치면 화면이
+  // "설정이 잘못됐다"로 읽히는 문구만 내보낸다.
   if (response.status === 429) throw new AnalysisRateLimitedError()
+  if (response.status === 503) throw new AnalysisUnavailableError()
   if (!response.ok) throw new AnalysisUpstreamError()
 
   const text = extractOutputText(await response.json())

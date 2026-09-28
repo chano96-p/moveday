@@ -1,4 +1,5 @@
 import { NOTICE_TYPE_LABEL } from '@/lib/config'
+import { formatArea, formatManwon } from '@/lib/format'
 import type { CompetitionResult } from '@/lib/applyhome/competition'
 import type { RegulationInfo } from '@/lib/applyhome/adapters'
 import type { MarketSeries, Notice, SupplyRow } from '@/lib/types'
@@ -10,7 +11,19 @@ export const ANALYSIS_SYSTEM_INSTRUCTION = `너는 한국 아파트 청약 공�
 - 산술은 하지 않는다. 입력에 있는 숫자를 그대로 인용하고 해석만 한다.
 - 경쟁률·당첨가점이 비어 있으면 "아직 발표 전"으로 다루고 추정하지 않는다.
 - 투자 권유·수익 예측을 하지 않는다. 판단 재료만 정리한다.
-- 한국어 존댓말, 한 항목은 한 문장. 수식어를 줄이고 숫자를 앞에 둔다.`
+- 한국어 존댓말, 한 항목은 한 문장. 수식어를 줄이고 숫자를 앞에 둔다.
+
+표기:
+- 주택형을 가리킬 때는 \`표기\` 값을 쓴다. \`주택형\` 코드(\`055.0000O\` 같은 값)는 식별용이므로
+  문장에 그대로 옮기지 않는다.
+- 금액은 \`분양가\` 문자열을 그대로 쓴다. 단위를 바꾸거나 다시 쓰지 않는다.
+- headline은 40자를 넘기지 않는다.
+
+항목별 지시:
+- priceContext: \`지역시세\`가 있으면 전월·전년 대비 흐름을 **반드시** 함께 언급한다.
+  비어 있으면 분양가 범위만 서술한다.
+- cautions: 규제·자격·일정에서 **놓치기 쉬운** 점만 쓴다. 접수 기간이나 입주 예정월 같은
+  단순 사실 나열은 넣지 않는다. 없으면 빈 배열로 둔다.`
 
 export interface AnalysisPayload {
   notice: Notice
@@ -27,6 +40,11 @@ export interface AnalysisPayload {
  * 시계열은 36개월 전체가 아니라 변동률과 최신 한 점만 넣는다. 나머지 35점은 토큰만 쓰고
  * 결론을 바꾸지 않는다.
  */
+function latestPoint(series: MarketSeries): { month: string; value: number } | null {
+  const point = series.points.at(-1)
+  return point ? { month: point.month, value: Math.round(point.value * 10) / 10 } : null
+}
+
 export function buildAnalysisInput(payload: AnalysisPayload): string {
   const { notice, supply, regulation, competition, market } = payload
 
@@ -42,13 +60,14 @@ export function buildAnalysisInput(payload: AnalysisPayload): string {
       당첨발표: notice.winnerDate,
       입주예정월: notice.moveInMonth,
     },
+    // 주택형 코드(`055.0000O`)는 조인 키라 사람이 읽는 문장에 들어가면 안 되고, 금액도
+    // 모델이 "36,707만 원"으로 옮겨 적는다. 사람이 읽을 형태를 **같이** 넘겨 그걸 쓰게 한다.
     주택형: supply.map((row) => ({
       주택형: row.houseType,
-      면적: row.area.value,
-      면적종류: row.area.kind === 'supply' ? '공급면적' : '전용면적',
+      표기: `${row.area.kind === 'supply' ? '공급' : '전용'} ${formatArea(row.area.value)}`,
       일반공급세대: row.generalUnits,
       특별공급세대: row.specialUnits,
-      분양가만원: row.price,
+      분양가: formatManwon(row.price),
     })),
     규제: regulation.available ? regulation.flags.map((flag) => flag.label) : null,
     경쟁률: competition
@@ -63,9 +82,11 @@ export function buildAnalysisInput(payload: AnalysisPayload): string {
           당첨가점: row.score ?? null,
         }))
       : null,
+    // 지수는 상류가 소수 12자리까지 준다(`100.188892679124`) — 그대로 넘기면 모델이
+    // 그 숫자를 문장에 그대로 옮겨 적는다(실측). 표시 단위로 줄여서 넘긴다.
     지역시세: market.map((series) => ({
       지표: series.label,
-      최신: series.points.at(-1) ?? null,
+      최신: latestPoint(series),
       전월대비퍼센트: series.change.mom,
       전년대비퍼센트: series.change.yoy,
       비고: '기준시점 100의 지수다. 절대 가격이 아니다.',

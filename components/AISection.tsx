@@ -29,7 +29,7 @@ export function AISection({ id, type }: { id: string; type: NoticeType }) {
   const code = error instanceof Error ? error.message : ''
 
   // 키가 없으면 섹션째 숨긴다 — 지도·시세가 키 없을 때 타는 경로와 같다(§5).
-  if (code === 'HTTP_503') return null
+  if (code === 'ANALYSIS_KEY_MISSING') return null
 
   if (isFetching) {
     return (
@@ -41,9 +41,11 @@ export function AISection({ id, type }: { id: string; type: NoticeType }) {
 
   if (error) {
     const message =
-      code === 'HTTP_429'
-        ? '호출 한도에 걸렸습니다. 잠시 후 다시 시도해 주세요.'
-        : '분석을 만들지 못했습니다.'
+      code === 'ANALYSIS_RATE_LIMITED'
+        ? '분당 호출 한도에 걸렸습니다. 1분 뒤 다시 시도해 주세요.'
+        : code === 'ANALYSIS_UNAVAILABLE'
+          ? '모델이 혼잡합니다. 잠시 후 다시 시도해 주세요.'
+          : '분석을 만들지 못했습니다.'
     return (
       <Section>
         <div className="py-6 text-center">

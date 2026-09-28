@@ -93,8 +93,16 @@ export const REBSTAT_REGION_CLS_ID: Record<RebstatTableId, Record<'전국' | Reg
 export const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/interactions'
 
 /**
- * 분석문은 한국어 서술 + 고정 스키마 JSON이다. 이 둘을 동시에 요구하면 경량 모델이
- * 한국어가 어색해지거나 스키마를 어긴다 — flash-lite가 아니라 flash를 기본으로 둔다.
- * 무료 티어 한도에 걸리면 `gemini-3.5-flash-lite`로 내리는 것이 첫 번째 조치다.
+ * 분석문은 한국어 서술 + 고정 스키마 JSON이다. 둘을 동시에 요구하면 경량 모델이 한국어가
+ * 어색해지거나 스키마를 어기므로 원래는 `gemini-3.8-flash`를 기본으로 뒀다.
+ *
+ * 실측(2026-09-28)에서 그 판단을 바꿨다. flash는 **무료 티어 분당 5회**이고 하루 내내
+ * `503 "currently experiencing high demand"`로 거절했다 — 품질을 따지기 전에 응답 자체를
+ * 못 받는다. `gemini-3.1-flash-lite`는 같은 프롬프트로 정상 응답했고 출력도 쓸 만했다.
+ * **받아볼 수 없는 품질보다 받아지는 품질이 낫다**는 이유로 기본을 이쪽으로 둔다.
+ *
+ * flash가 한가해지면 `GEMINI_MODEL=gemini-3.8-flash`로 덮어쓰면 된다 — 코드 수정 없이.
+ * 클라이언트 번들에서는 이 값이 읽히지 않아 항상 기본값으로 떨어지지만, 실제 호출은
+ * 서버에서만 일어나고 응답이 쓴 모델명을 실어 보내므로 화면 표기는 어긋나지 않는다.
  */
-export const GEMINI_MODEL = 'gemini-3.8-flash'
+export const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-lite'

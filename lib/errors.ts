@@ -83,6 +83,14 @@ export class AnalysisRateLimitedError extends AppError {
   }
 }
 
+export class AnalysisUnavailableError extends AppError {
+  readonly code = 'ANALYSIS_UNAVAILABLE'
+  readonly status = 502
+  constructor() {
+    super('Gemini 모델이 혼잡합니다.')
+  }
+}
+
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError
 }

@@ -131,7 +131,7 @@ describe('buildAnalysisInput', () => {
   it('정규화된 값을 담는다', () => {
     expect(input).toContain('테스트아파트')
     expect(input).toContain('2026-09-10')
-    expect(input).toContain('56700')
+    expect(input).toContain('5억 6,700만')
     expect(input).toContain('투기과열지구')
   })
 
@@ -140,7 +140,8 @@ describe('buildAnalysisInput', () => {
     expect(JSON.parse(input.slice(input.indexOf('{'))).경쟁률).toBeNull()
   })
 
-  it('면적 종류를 이름으로 푼다', () => {
-    expect(input).toContain('공급면적')
+  // 주택형 코드가 문장에 섞여 나오는 것을 막으려고 사람이 읽을 표기를 같이 넘긴다.
+  it('주택형에 사람이 읽을 표기를 붙인다', () => {
+    expect(input).toContain('공급 85㎡')
   })
 })

@@ -85,8 +85,18 @@ Schema를 전부 만든다. 두 벌로 들면 한쪽만 고쳤을 때 *모델은
 떨어지는* 조합이 말없이 생긴다. `response_format`을 줘도 준수는 상류의 약속일 뿐이라
 라우트에서 zod로 다시 검증한다 — 여기서 안 막으면 필드가 빠진 객체가 캐시에 24시간 박힌다.
 
-무료 티어의 제약은 돈이 아니라 호출 한도다. 훅이 `enabled: false`라 버튼으로만 시작하고,
-`unstable_cache`가 공고당 24시간을 잡는다. 한도가 방문자 수가 아니라 **공고 수**만큼만 쓰인다.
+무료 티어의 제약은 돈이 아니라 호출 한도다(`gemini-3.8-flash` 기준 **분당 5회**, 실측).
+훅이 `enabled: false`라 버튼으로만 시작하고, `unstable_cache`가 공고당 24시간을 잡는다.
+한도가 방문자 수가 아니라 **공고 수**만큼만 쓰인다.
+
+실제로 돌려보고 설계 판단 하나를 뒤집었다. 품질을 이유로 `gemini-3.8-flash`를 기본으로 뒀는데,
+무료 티어에서 종일 `503 high demand`로 거절당해 **품질을 비교할 기회조차 없었다.**
+응답하는 `gemini-3.1-flash-lite`로 내리고 `GEMINI_MODEL`로 되돌릴 수 있게 열어뒀다.
+
+첫 생성물에는 `055.0000O 타입 분양가는 36,707만 원`, `지수 100.188892679124를 기록` 같은
+문장이 있었다. 스키마는 통과하고 200도 떨어지는데 문장 속 값이 틀린, 이 프로젝트가 계속
+만나온 부류다. 조인 키와 별도로 사람이 읽을 표기(`공급 85㎡`, `3억 6,707만`)를 같이 넘겨
+고쳤다 — **스키마는 형태만 보장하고 내용은 보장하지 않는다.**
 
 > 배포본에는 `GEMINI_API_KEY`를 넣지 않았다. 키가 없으면 섹션 자체가 렌더되지 않는다 —
 > 지도·시세가 키 없을 때 타는 경로와 같다. 로컬에서 키를 넣으면 동작한다.
@@ -139,6 +149,7 @@ MOVEDAY_USE_FIXTURES=1
 | `REB_STAT_API_KEY` | [R-ONE](https://www.reb.or.kr/r-one/portal/openapi/openApiActKeyPage.do) — 포털이 아니라 R-ONE에서 직접 | 시세 차트만 사라짐 |
 | `NEXT_PUBLIC_KAKAO_MAP_KEY` | [Kakao Developers](https://developers.kakao.com) — **JavaScript 키**, Web 플랫폼에 도메인 등록 필요 | 지도 섹션만 사라짐 |
 | `GEMINI_API_KEY` | [Google AI Studio](https://aistudio.google.com/apikey) — 무료 티어 | AI 분석 섹션만 사라짐 |
+| `GEMINI_MODEL` | 선택. 기본 `gemini-3.1-flash-lite` | 기본값 사용 |
 
 공공데이터포털은 **Decoding 키**를 쓴다. 이 앱은 키를 `Authorization: Infuser {key}` 헤더로
 보내므로 URL 인코딩된 Encoding 키를 넣으면 인증이 깨진다.
