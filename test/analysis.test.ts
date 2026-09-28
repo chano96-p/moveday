@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { extractOutputText } from '@/lib/gemini/client'
+import { resolveModel } from '@/lib/config'
 import { AnalysisSchema, analysisJsonSchema } from '@/lib/analysis/schema'
 import { buildAnalysisInput } from '@/lib/analysis/prompt'
 import type { Notice, SupplyRow } from '@/lib/types'
@@ -143,5 +144,58 @@ describe('buildAnalysisInput', () => {
   // 주택형 코드가 문장에 섞여 나오는 것을 막으려고 사람이 읽을 표기를 같이 넘긴다.
   it('주택형에 사람이 읽을 표기를 붙인다', () => {
     expect(input).toContain('공급 85㎡')
+  })
+})
+
+describe('buildAnalysisInput — 변동률 방향', () => {
+  function inputWithChange(mom: number | null) {
+    return buildAnalysisInput({
+      notice: NOTICE,
+      supply: SUPPLY,
+      regulation: { available: false, flags: [] },
+      competition: null,
+      market: [
+        {
+          key: 'sale',
+          label: '아파트 매매가격지수',
+          points: [{ month: '2026-08', value: 99.6884213004185 }],
+          change: { mom, yoy: null },
+        },
+      ],
+    })
+  }
+
+  // 부호 붙은 숫자를 넘기면 "상승"인지 "하락"인지가 모델의 해석에 달린다.
+  it.each([
+    [-0.16, '0.16% 하락'],
+    [1.05, '1.05% 상승'],
+    [0, '보합'],
+  ])('%s는 "%s"로 넘어간다', (mom, expected) => {
+    expect(inputWithChange(mom as number)).toContain(expected)
+  })
+
+  // 지수 원값(소수 12자리)이 그대로 들어가면 모델이 문장에 옮겨 적는다.
+  it('지수는 소수 1자리로 줄여 넘긴다', () => {
+    const input = inputWithChange(null)
+    expect(input).toContain('99.7')
+    expect(input).not.toContain('99.6884213004185')
+  })
+})
+
+describe('resolveModel', () => {
+  const DEFAULT = 'gemini-3.1-flash-lite'
+
+  // `.env.example`을 복사하면 GEMINI_MODEL=(빈 값)이 된다. `??`로 받으면 이 빈 문자열이
+  // 기본값을 덮어써 모델명 ''로 호출이 나가고 상류가 404 Model '' not found를 낸다.
+  it.each(['', '   ', undefined])('설정되지 않은 값(%j)은 기본 모델로 떨어진다', (value) => {
+    expect(resolveModel(value)).toBe(DEFAULT)
+  })
+
+  it('지정한 모델을 쓴다', () => {
+    expect(resolveModel('gemini-3.8-flash')).toBe('gemini-3.8-flash')
+  })
+
+  it('앞뒤 공백을 지운다', () => {
+    expect(resolveModel('  gemini-3.8-flash  ')).toBe('gemini-3.8-flash')
   })
 })

@@ -22,8 +22,8 @@ export const ANALYSIS_SYSTEM_INSTRUCTION = `너는 한국 아파트 청약 공�
 항목별 지시:
 - priceContext: \`지역시세\`가 있으면 전월·전년 대비 흐름을 **반드시** 함께 언급한다.
   비어 있으면 분양가 범위만 서술한다.
-- cautions: 규제·자격·일정에서 **놓치기 쉬운** 점만 쓴다. 접수 기간이나 입주 예정월 같은
-  단순 사실 나열은 넣지 않는다. 없으면 빈 배열로 둔다.`
+- cautions: 규제·자격·경쟁에서 **놓치기 쉬운** 점만 쓴다. 일정을 그대로 옮긴 문장
+  (접수 기간·당첨자 발표일·입주 예정월)은 주의사항이 아니다. 없으면 빈 배열로 둔다.`
 
 export interface AnalysisPayload {
   notice: Notice
@@ -40,6 +40,17 @@ export interface AnalysisPayload {
  * 시계열은 36개월 전체가 아니라 변동률과 최신 한 점만 넣는다. 나머지 35점은 토큰만 쓰고
  * 결론을 바꾸지 않는다.
  */
+/**
+ * 변동률을 부호 붙은 숫자가 아니라 방향이 박힌 문자열로 넘긴다. `-0.16`을 주면 "상승"과
+ * "하락" 중 어느 쪽인지는 모델의 해석에 달리는데, 이 프로젝트에서 틀리면 곤란한 것이
+ * 정확히 그런 값이다 — 방향은 코드가 정한다.
+ */
+function describeChange(value: number | null): string | null {
+  if (value === null) return null
+  if (value === 0) return '보합'
+  return `${Math.abs(value).toFixed(2)}% ${value > 0 ? '상승' : '하락'}`
+}
+
 function latestPoint(series: MarketSeries): { month: string; value: number } | null {
   const point = series.points.at(-1)
   return point ? { month: point.month, value: Math.round(point.value * 10) / 10 } : null
@@ -87,8 +98,8 @@ export function buildAnalysisInput(payload: AnalysisPayload): string {
     지역시세: market.map((series) => ({
       지표: series.label,
       최신: latestPoint(series),
-      전월대비퍼센트: series.change.mom,
-      전년대비퍼센트: series.change.yoy,
+      전월대비: describeChange(series.change.mom),
+      전년대비: describeChange(series.change.yoy),
       비고: '기준시점 100의 지수다. 절대 가격이 아니다.',
     })),
   }

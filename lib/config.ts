@@ -105,4 +105,14 @@ export const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/int
  * 클라이언트 번들에서는 이 값이 읽히지 않아 항상 기본값으로 떨어지지만, 실제 호출은
  * 서버에서만 일어나고 응답이 쓴 모델명을 실어 보내므로 화면 표기는 어긋나지 않는다.
  */
-export const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-3.1-flash-lite'
+export const GEMINI_MODEL = resolveModel(process.env.GEMINI_MODEL)
+
+/**
+ * **빈 문자열을 "설정 안 함"으로 본다.** `?? `로 받으면 `GEMINI_MODEL=`(값 없는 줄)이
+ * 기본값을 덮어써 모델명 `''`로 호출이 나가고, 상류가 `Model '' not found`(404)를 낸다.
+ * `.env.example`을 그대로 복사하면 항상 그 상태가 되므로 여기서 접는다.
+ */
+export function resolveModel(value: string | undefined): string {
+  const trimmed = value?.trim()
+  return trimmed ? trimmed : 'gemini-3.1-flash-lite'
+}
