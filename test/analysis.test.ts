@@ -142,8 +142,10 @@ describe('buildAnalysisInput', () => {
   })
 
   // 주택형 코드가 문장에 섞여 나오는 것을 막으려고 사람이 읽을 표기를 같이 넘긴다.
-  it('주택형에 사람이 읽을 표기를 붙인다', () => {
+  // 조인 키를 넘기면 모델이 문장에 그대로 옮겨 적는다. 사람이 읽을 이름만 넘긴다.
+  it('주택형을 사람이 읽을 이름으로 바꿔 넘긴다', () => {
     expect(input).toContain('공급 85㎡')
+    expect(input).not.toContain('84.9500A')
   })
 
   // OPT Mdl에는 면적 필드가 없다. formatArea(null)의 '-'를 그대로 쓰면 `공급 -`이 문장에 나간다.
@@ -155,7 +157,7 @@ describe('buildAnalysisInput', () => {
       competition: null,
       market: [],
     })
-    expect(noArea).toContain('"표기": "84.9500A"')
+    expect(noArea).toContain('"주택형": "84.9500A"')
     expect(noArea).not.toContain('공급 -')
   })
 })
@@ -192,6 +194,11 @@ describe('buildAnalysisInput — 변동률 방향', () => {
     const input = inputWithChange(null)
     expect(input).toContain('99.7')
     expect(input).not.toContain('99.6884213004185')
+  })
+
+  // `2026-08`을 그대로 주면 모델이 "2026-08 기준"이라고 옮겨 적는다.
+  it('기준월을 읽는 형태로 넘긴다', () => {
+    expect(inputWithChange(null)).toContain('2026년 8월')
   })
 })
 

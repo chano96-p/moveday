@@ -14,9 +14,7 @@ export const ANALYSIS_SYSTEM_INSTRUCTION = `너는 한국 아파트 청약 공�
 - 한국어 존댓말, 한 항목은 한 문장. 수식어를 줄이고 숫자를 앞에 둔다.
 
 표기:
-- 주택형을 가리킬 때는 \`표기\` 값을 쓴다. \`주택형\` 코드(\`055.0000O\` 같은 값)는 식별용이므로
-  문장에 그대로 옮기지 않는다.
-- 금액은 \`분양가\` 문자열을 그대로 쓴다. 단위를 바꾸거나 다시 쓰지 않는다.
+- 주택형·금액은 입력에 적힌 문자열을 그대로 쓴다. 단위를 바꾸거나 다시 쓰지 않는다.
 - headline은 40자를 넘기지 않는다.
 
 항목별 지시:
@@ -61,9 +59,12 @@ function displayLabel(row: SupplyRow): string {
   return `${row.area.kind === 'supply' ? '공급' : '전용'} ${formatArea(row.area.value)}`
 }
 
-function latestPoint(series: MarketSeries): { month: string; value: number } | null {
+function latestPoint(series: MarketSeries): { 기준월: string; 지수: number } | null {
   const point = series.points.at(-1)
-  return point ? { month: point.month, value: Math.round(point.value * 10) / 10 } : null
+  if (!point) return null
+  // `2026-08`을 그대로 주면 모델이 "2026-08 기준"으로 옮겨 적는다 — 문장에 쓸 형태로 넘긴다.
+  const [year, month] = point.month.split('-')
+  return { 기준월: `${year}년 ${Number(month)}월`, 지수: Math.round(point.value * 10) / 10 }
 }
 
 export function buildAnalysisInput(payload: AnalysisPayload): string {
@@ -81,11 +82,11 @@ export function buildAnalysisInput(payload: AnalysisPayload): string {
       당첨발표: notice.winnerDate,
       입주예정월: notice.moveInMonth,
     },
-    // 주택형 코드(`055.0000O`)는 조인 키라 사람이 읽는 문장에 들어가면 안 되고, 금액도
-    // 모델이 "36,707만 원"으로 옮겨 적는다. 사람이 읽을 형태를 **같이** 넘겨 그걸 쓰게 한다.
+    // 주택형 코드(`055.0000O`)는 **넘기지 않는다.** 조인 키는 우리가 쓰는 값이지 모델이
+    // 쓸 값이 아니다. 같이 넘기고 "쓰지 마라"고 지시했더니 경량 모델이 절반쯤만 지켜
+    // `055.0000O 타입의 분양가는…` 같은 문장이 나왔다(실측) — 주지 않으면 인용할 수 없다.
     주택형: supply.map((row) => ({
-      주택형: row.houseType,
-      표기: displayLabel(row),
+      주택형: displayLabel(row),
       일반공급세대: row.generalUnits,
       특별공급세대: row.specialUnits,
       분양가: formatManwon(row.price),
